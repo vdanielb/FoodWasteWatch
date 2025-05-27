@@ -4,7 +4,8 @@ async function drawFoodWasteMap2023() {
   const us = await d3.json(geoUrl);
 
   // Load CSV and filter for 2023
-  const data = await d3.csv('data/wastebyyear.csv', d => {
+  // const data = await d3.csv('data/wastebyyear.csv', d => {
+  const data = await d3.csv('https://raw.githubusercontent.com/vdanielb/FoodWasteWatch/main/data/wastebyyear.csv', d => {
     d.year = +d.year;
     d.tons_waste = +d.tons_waste;
     return d;
