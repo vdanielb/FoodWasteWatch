@@ -64,27 +64,19 @@ svg { width: 100%; height: auto; }
 
 .sticky-container {
   position: relative;
-  height: 100vh;
-  overflow: hidden;
 }
 
 .sticky-content {
   position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 0;                  
 }
 
 .step {
-  position: absolute;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 2rem;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  min-height: 100vh;       
+  display: flex;           
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 1.5rem;
 }
 
 .step.active {
