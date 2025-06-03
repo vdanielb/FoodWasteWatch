@@ -82,13 +82,13 @@ async function drawFoodWasteMap2023() {
 
   // Map state names to postal codes for GeoJSON
   // us-atlas uses state FIPS codes, so we need a mapping
-  // We'll use d3.geoPath and d3.geoAlbersUsa for projection
   const width = 960, height = 500;
   d3.select('#map').selectAll('*').remove();
   const svg = d3.select('#map').append('svg')
     .attr('width', width)
     .attr('height', height);
 
+  // use d3.geoPath and d3.geoAlbersUsa for projection
   const projection = d3.geoAlbersUsa().fitSize([width, height], topojson.feature(us, us.objects.states));
   const path = d3.geoPath().projection(projection);
 
@@ -133,8 +133,61 @@ async function drawFoodWasteMap2023() {
       const fips = d.id.toString().padStart(2, '0');
       const stateName = stateIdToName.get(fips);
       const waste = wasteByState.get(stateName);
-      tooltip.style('display', 'block')
-        .html(`<strong>${stateName}</strong><br/>${waste ? waste.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons per 10,000 people`);
+
+      // Filter and group by food_type for this state
+      const stateFoodData = data2023.filter(row => row.state === stateName);
+      const foodTypeTotals = d3.rollups(
+        stateFoodData,
+        v => d3.sum(v, d => d.tons_waste),
+        d => d.food_type
+      );
+
+      // Tooltip HTML
+      let html = `<strong>${stateName}</strong><br/>${waste ? waste.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons per 10,000 people`;
+      html += `<div id="tooltip-barchart" style="display: flex; justify-content: center; align-items: center; margin-top: 10px;"></div>`;
+      tooltip.style('display', 'block').html(html);
+
+      // Draw the bar chart using D3
+      setTimeout(() => {
+        const width = 360, height = 180, margin = {left: 70, right: 10, top: 10, bottom: 60};
+        const svg = d3.select('#tooltip-barchart')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height)
+          .style('margin', 'auto')
+          .style('display', 'block');
+
+        const x = d3.scaleBand()
+          .domain(foodTypeTotals.map(d => d[0]))
+          .range([margin.left, width - margin.right])
+          .padding(0.1);
+
+        const y = d3.scaleLinear()
+          .domain([0, d3.max(foodTypeTotals, d => d[1])])
+          .nice()
+          .range([height - margin.bottom, margin.top]);
+
+        svg.append('g')
+          .selectAll('rect')
+          .data(foodTypeTotals)
+          .join('rect')
+          .attr('x', d => x(d[0]))
+          .attr('y', d => y(d[1]))
+          .attr('height', d => y(0) - y(d[1]))
+          .attr('width', x.bandwidth())
+          .attr('fill', '#69b3a2');
+
+        svg.append('g')
+          .attr('transform', `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x).tickSizeOuter(0))
+          .selectAll('text')
+          .attr('transform', 'rotate(-40)')
+          .style('text-anchor', 'end');
+
+        svg.append('g')
+          .attr('transform', `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y).ticks(4));
+      }, 0);
     })
     .on('mousemove', function(event) {
       tooltip.style('left', (event.pageX + 10) + 'px')

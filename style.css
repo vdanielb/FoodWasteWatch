@@ -1,23 +1,76 @@
-body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 960px; }
+@import url('https://fonts.cdnfonts.com/css/chomsky');
+
+body { 
+  font-family: Georgia, 'Times New Roman', Times, serif; margin: 0 auto; max-width: 960px; 
+}
+
+.newspaper-header {
+  font-family: 'Chomsky', serif;
+  text-align: center;
+  padding: 0.7rem 0;
+  border-bottom: 2px solid #000;
+  margin-bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 1000;
+}
+
+.newspaper-header h1 {
+  font-weight: 400;
+  font-size: 1.5 rem;
+  margin: 0;
+  line-height: 1.2;
+}
+
 header { 
   text-align: center; 
   padding: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   position: relative;
+  margin-top: 0;
+  padding-top: 15vh;
+}
+
+.header-image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
 }
 
 header h1 {
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
+header .subtitle {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #666;
+  margin-bottom: 2rem;
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
 
 section { margin: 2rem 0; }
 svg { width: 100%; height: auto; }
+
+/* map stuff */
+h2 {
+  text-align: center;
+}
+
 
 .map-container {
   position: relative;
@@ -47,11 +100,15 @@ svg { width: 100%; height: auto; }
     pointer-events: none;
     background: #fff;
     border: 1px solid #999;
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.3);
-  }
+    padding: 16px 20px;
+    font-size: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    min-width: 320px;
+    max-width: 420px;
+    word-break: break-word;
+    z-index: 2000;
+}
 
 /* Scrollytelling styles */
 .scrollytelling {
