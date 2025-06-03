@@ -7,20 +7,45 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="https://d3js.org/d3.v7.min.js"></script>
   <script defer src="https://unpkg.com/topojson-client@3"></script>
+  <script defer src="scrollytelling.js"></script>
   <script defer src="main.js"></script>
 </head>
 
 <body>
+  <header>
+    <h1>Food Waste in the United States</h1>
+    <div class="scroll-indicator">
+      <span>Scroll to explore</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- Scrollytelling section -->
+  <section class="scrollytelling">
+    <div class="sticky-container">
+      <div class="sticky-content">
+        <div class="step" data-step="1">
+          <h2>Every year, Americans waste...</h2>
+          <div class="animation-container" id="waste-animation-1"></div>
+        </div>
+        <div class="step" data-step="2">
+          <h2>That's enough to feed...</h2>
+          <div class="animation-container" id="waste-animation-2"></div>
+        </div>
+        <div class="step" data-step="3">
+          <h2>And it costs the average household...</h2>
+          <div class="animation-container" id="waste-animation-3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="map-container">
     <button id="resetView" class="reset-button">Reset View</button>
     <div id="map" style="width:100%; height:500px;"></div>
   </div>
-  <header>
-    <h1>Food Waste in the United States</h1>
-    <p class="lede">
-      Exploring ReFED's state-level surplus dataset.<br>
-    </p>
-  </header>
 
   <!-- Placeholder narrative text -->
   <section class="notes">
