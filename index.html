@@ -9,6 +9,130 @@
   <script defer src="https://unpkg.com/topojson-client@3"></script>
   <script defer src="scrollytelling.js"></script>
   <script defer src="main.js"></script>
+  <style>
+    #scrolly-foodwaste {
+      max-width: 800px;
+      margin: 24px auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 200vh; /* Increased to provide scrolling space */
+    }
+    #scrolly-foodwaste .sticky-container {
+      position: relative;
+    }
+    #scrolly-foodwaste .sticky-content {
+      position: relative; /* Changed from sticky to relative for normal flow */
+    }
+    .scrolly-step {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 8px 10px 8px;
+      margin: 0 auto 3rem auto; /* Increased spacing between cards */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      text-align: center;
+      width: 100%;
+      max-width: 700px;
+      height: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0.2; /* Start very faded */
+      transform: translateY(50px) scale(0.95); /* Start moved down and smaller */
+      transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smooth easing */
+    }
+    .scrolly-step.scrolly-year {
+      height: 440px;
+    }
+    .scrolly-step.active {
+      opacity: 1; /* Fully visible when active */
+      transform: translateY(0) scale(1.05); /* Move up and slightly larger */
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15); /* Enhanced shadow */
+    }
+    .scrolly-step.active h2 {
+      animation: textPop 0.6s ease-out forwards;
+    }
+    .scrolly-step.active .fw-visual {
+      animation: visualSlideIn 0.8s ease-out 0.2s forwards;
+    }
+    .scrolly-step h2 {
+      font-size: 1.2em;
+      margin-bottom: 8px;
+      font-weight: 700;
+      transform: translateY(20px);
+      opacity: 0.7;
+      transition: all 0.4s ease;
+    }
+    .fw-visual {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      transform: translateY(30px);
+      opacity: 0.5;
+    }
+    .fw-visual svg {
+      max-height: 260px;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    /* Animations */
+    @keyframes textPop {
+      0% {
+        transform: translateY(20px) scale(0.9);
+        opacity: 0.7;
+      }
+      50% {
+        transform: translateY(-5px) scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes visualSlideIn {
+      0% {
+        transform: translateY(30px) scale(0.9);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    
+    /* Enhanced text highlighting */
+    .scrolly-step.active .fw-day,
+    .scrolly-step.active .fw-month,
+    .scrolly-step.active .fw-year {
+      animation: numberGlow 1s ease-out 0.3s forwards;
+      display: inline-block;
+    }
+    
+    @keyframes numberGlow {
+      0% {
+        color: inherit;
+        transform: scale(1);
+      }
+      50% {
+        color: #e74c3c;
+        transform: scale(1.15);
+        text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+      }
+      100% {
+        color: #c0392b;
+        transform: scale(1.1);
+        font-weight: 900;
+        text-shadow: 0 0 5px rgba(192, 57, 43, 0.3);
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -28,8 +152,27 @@
     <div id="food-waste-animation" style="width:100%; display:flex; justify-content:center; margin: 30px 0;"></div>
   </header>
 
-  <!-- Scrollytelling section -->
-  <!-- TODO: Tristan -->
+  <section id="scrolly-foodwaste" class="scrollytelling">
+    <div class="scrolly-step step" id="scrolly-day" data-step="intro-1">
+      <h2>The average American wastes about <span class="fw-day">XX</span> lbs of food per day.</h2>
+      <div class="fw-visual" id="fw-visual-day"></div>
+    </div>
+    <div class="scrolly-step step" id="scrolly-month" data-step="intro-2">
+      <h2>In a month, that's <span class="fw-month">XX</span> lbs of food wasted.</h2>
+      <div class="fw-visual" id="fw-visual-month"></div>
+    </div>
+    <div class="scrolly-step step scrolly-year" id="scrolly-year" data-step="intro-3">
+      <h2>Over a year, over <span class="fw-year">XX</span> lbs of food waste is compiled.</h2>
+      <div class="fw-visual" id="fw-visual-year"></div>
+    </div>
+  </section>
+
+  <div class="map-container">
+    <button id="resetView" class="reset-button">Reset View</button>
+    <div id="map" style="width:100%; height:500px;"></div>
+  </div>
+
+  <!-- Intro scrollytelling steps moved below the map -->
   <section class="scrollytelling">
     <div class="sticky-container">
       <div class="sticky-content">
@@ -39,21 +182,27 @@
           <p class="sub">That's roughly 40 % of everything produced for the table.</p>
           <div class="animation-container" id="waste-animation-1"></div>
         </div>
-  
         <!-- Step 2 — skyline comparison -->
         <div class="step" data-step="2">
           <h2>Stack it up and you could fill the Empire State Building <span class="stat" id="stat-esb">450</span> times.</h2>
           <p class="sub">Picture New York's iconic tower overflowing with leftovers—<em>every three days</em>.</p>
           <div class="animation-container" id="waste-animation-2"></div>
         </div>
-  
         <!-- Step 3 — household dollars -->
         <div class="step" data-step="3">
           <h2>The lost food is worth <span class="stat" id="stat-value">$440&nbsp;billion</span>.</h2>
           <p class="sub">For the average family, that's <span class="stat" id="stat-household">$1,400</span> vanishing from the grocery budget each year.</p>
           <div class="animation-container" id="waste-animation-3"></div>
         </div>
-  
+      </div>
+    </div>
+  </section>
+
+  <!-- Scrollytelling section -->
+  <!-- TODO: Tristan -->
+  <section class="scrollytelling">
+    <div class="sticky-container">
+      <div class="sticky-content">
         <!-- Step 4 — climate impact -->
         <div class="step" data-step="4">
           <h2>As it rots, wasted food emits as much CO₂e as <span class="stat" id="stat-cars">58&nbsp;million</span> cars.</h2>
@@ -104,13 +253,6 @@
       </div>
     </div>
   </section>
-  <!-- Map section -->
-  <!-- TODO: Daniel -->
-  <h2>Explore the data yourself</h2>
-  <div class="map-container">
-    <button id="resetView" class="reset-button">Reset View</button>
-    <div id="map" style="width:100%; height:500px;"></div>
-  </div>
 
   <!-- Solutions and Conclusions section -->
   <!-- TODO: Clayton -->

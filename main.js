@@ -238,24 +238,39 @@ function animateFoodWasteFalling() {
     .attr('height', height);
 
   // Draw ground/pile base
-  const groundColor = '#b5a27a';
   svg.append('ellipse')
     .attr('cx', width/2)
     .attr('cy', height-20)
     .attr('rx', 80)
     .attr('ry', 25)
-    .attr('fill', groundColor);
+    .attr('fill', '#b5a27a');
 
-  // Only circles, same color as ground
+  // Trash-like colors for circles
+  const trashColors = [
+    '#b5a27a', // brown (paper bag, cardboard)
+    '#e0e0e0', // light gray (paper, plastic)
+    '#7fd3e6', // blue (recycling, bottles)
+    '#a3c586', // green (organic, glass)
+    '#f5e6c8', // beige (food, napkins)
+    '#b0b0b0', // gray (metal, can)
+    '#fffbe6', // off-white (styrofoam, paper)
+    '#ffe066', // yellow (plastic, wrappers)
+    '#e74c3c', // red (labels, packaging)
+    '#6a7b8c', // dark gray (metal, can)
+    '#e2b07a', // tan (box)
+    '#e0f7fa'  // light blue (plastic bag)
+  ];
+
   function dropCircle() {
     const x = width/2 + (Math.random()-0.5)*120;
     const r = 8 + Math.random()*10;
+    const color = trashColors[Math.floor(Math.random()*trashColors.length)];
     const g = svg.append('g').attr('class', 'falling-circle');
     g.append('circle')
       .attr('cx', 0)
       .attr('cy', 0)
       .attr('r', r)
-      .attr('fill', groundColor)
+      .attr('fill', color)
       .attr('opacity', 0.95);
     g.attr('transform', `translate(${x},-30)`);
     // Animate falling
@@ -264,16 +279,7 @@ function animateFoodWasteFalling() {
       .ease(d3.easeBounce)
       .attr('transform', `translate(${x},${height-40-Math.random()*10})`)
       .on('end', function() {
-        // Add to pile (keep on screen, fade a bit)
-        d3.select(this)
-          .transition().duration(300)
-          .style('opacity', 0.7)
-          .on('end', function() {
-            // Optionally: limit pile size
-            if (svg.selectAll('g.falling-circle').size() > 30) {
-              svg.select('g.falling-circle').remove();
-            }
-          });
+        d3.select(this).style('opacity', 1);
       });
   }
 
@@ -283,4 +289,109 @@ function animateFoodWasteFalling() {
 document.addEventListener('DOMContentLoaded', function() {
   drawFoodWasteMap2023();
   animateFoodWasteFalling();
+
+  // --- Food waste scrollytelling calculations and visuals ---
+  d3.csv('data/wastebyyear.csv', d => {
+    d.year = +d.year;
+    d.tons_waste = +d.tons_waste;
+    return d;
+  }).then(data => {
+    // Filter for 2023
+    const data2023 = data.filter(d => d.year === 2023);
+    // Get state populations from main.js
+    const statePop2023 = {
+      "Alabama": 5074296, "Alaska": 733406, "Arizona": 7359191, "Arkansas": 3045637, "California": 38918045,
+      "Colorado": 5912064, "Connecticut": 3605944, "Delaware": 1045631, "District of Columbia": 678972, "Florida": 22377446,
+      "Georgia": 11015963, "Hawaii": 1427539, "Idaho": 1942571, "Illinois": 12582032, "Indiana": 6842384,
+      "Iowa": 3205690, "Kansas": 2934582, "Kentucky": 4546607, "Louisiana": 4569031, "Maine": 1396966,
+      "Maryland": 6195295, "Massachusetts": 6981974, "Michigan": 10061863, "Minnesota": 5737914, "Mississippi": 2918320,
+      "Missouri": 6168187, "Montana": 1103349, "Nebraska": 1961504, "Nevada": 3235251, "New Hampshire": 1388992,
+      "New Jersey": 9261692, "New Mexico": 2115252, "New York": 19453561, "North Carolina": 10701022, "North Dakota": 779261,
+      "Ohio": 11780017, "Oklahoma": 4019800, "Oregon": 4237256, "Pennsylvania": 12801989, "Rhode Island": 1097379,
+      "South Carolina": 5321610, "South Dakota": 909824, "Tennessee": 7092654, "Texas": 30439188, "Utah": 3402027,
+      "Vermont": 647156, "Virginia": 8683619, "Washington": 7715946, "West Virginia": 1778070, "Wisconsin": 5893718,
+      "Wyoming": 586485
+    };
+    // Sum total waste and population
+    let totalTons = 0;
+    let totalPop = 0;
+    for (const state of Object.keys(statePop2023)) {
+      const stateWaste = data2023.filter(d => d.state === state);
+      totalTons += d3.sum(stateWaste, d => d.tons_waste);
+      totalPop += statePop2023[state];
+    }
+    const totalLbs = totalTons * 2000;
+    const perPersonYear = totalLbs / totalPop;
+    const perPersonDay = perPersonYear / 365;
+    const perPersonMonth = perPersonDay * 30;
+    // Round for display
+    const r = x => Math.round(x);
+    document.querySelector('.fw-day').textContent = r(perPersonDay);
+    document.querySelector('.fw-month').textContent = r(perPersonMonth);
+    document.querySelector('.fw-year').textContent = r(perPersonYear);
+
+    // --- Visualizations with real-world food equivalents ---
+    // Day: Apples (0.33 lbs each)
+    const appleWeight = 0.33;
+    const numApples = Math.max(1, Math.round(perPersonDay / appleWeight));
+    let applesSVG = '';
+    const applesPerRow = 10;
+    const appleRows = Math.ceil(numApples / applesPerRow);
+    const appleGridWidth = applesPerRow * 15;
+    const appleSVGWidth = 200;
+    const appleSVGHeight = 60;
+    const appleXOffset = (appleSVGWidth - appleGridWidth) / 2 + 7.5;
+    const appleYStart = (appleSVGHeight - (appleRows * 18)) / 2 + 15;
+    for (let i = 0; i < numApples; i++) {
+      const x = appleXOffset + (i % applesPerRow) * 15;
+      const y = appleYStart + Math.floor(i / applesPerRow) * 18;
+      applesSVG += `<g><ellipse cx="${x}" cy="${y}" rx="7" ry="7" fill="#e74c3c" stroke="#b53c2e" stroke-width="1.5"/><rect x="${x-1.5}" y="${y-10}" width="3" height="6" fill="#8e5a1d"/></g>`;
+    }
+    document.getElementById('fw-visual-day').innerHTML = `
+      <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
+      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numApples} apples (0.33 lbs each)</div>
+    `;
+    
+    // Month: Loaves of bread (1 lb each), wider grid layout
+    const loafWeight = 1;
+    const numLoaves = Math.max(1, Math.round(perPersonMonth / loafWeight));
+    let loavesSVG = '';
+    const loavesPerCol = 4;
+    const loavesCols = Math.ceil(numLoaves / loavesPerCol);
+    const loafGridWidth = loavesCols * 22;
+    const loafSVGWidth = 400;
+    const loafSVGHeight = 100;
+    const loafXOffset = (loafSVGWidth - loafGridWidth) / 2 + 11;
+    const loafYStart = (loafSVGHeight - (loavesPerCol * 18)) / 2 + 15;
+    for (let i = 0; i < numLoaves; i++) {
+      const x = loafXOffset + Math.floor(i / loavesPerCol) * 22;
+      const y = loafYStart + (i % loavesPerCol) * 18;
+      loavesSVG += `<g><rect x="${x-8}" y="${y-7}" width="16" height="14" rx="5" fill="#e2b07a" stroke="#a67c52" stroke-width="1.5"/><ellipse cx="${x}" cy="${y-7}" rx="8" ry="5" fill="#fffbe6" opacity="0.7"/></g>`;
+    }
+    document.getElementById('fw-visual-month').innerHTML = `
+      <svg width="${loafSVGWidth}" height="${loafSVGHeight}" style="display:block;margin:0 auto;">${loavesSVG}</svg>
+      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numLoaves} loaves of bread (1 lb each)</div>
+    `;
+    
+    // Year: Watermelons (5 lbs each), wider grid layout
+    const melonWeight = 5;
+    const numMelons = Math.max(1, Math.round(perPersonYear / melonWeight));
+    let melonsSVG = '';
+    const melonsPerCol = 6;
+    const melonsCols = Math.ceil(numMelons / melonsPerCol);
+    const melonGridWidth = melonsCols * 28;
+    const melonSVGWidth = 500;
+    const melonSVGHeight = 280;
+    const melonXOffset = (melonSVGWidth - melonGridWidth) / 2 + 14;
+    const melonYStart = 30;
+    for (let i = 0; i < numMelons; i++) {
+      const x = melonXOffset + Math.floor(i / melonsPerCol) * 28;
+      const y = melonYStart + (i % melonsPerCol) * 22;
+      melonsSVG += `<g><ellipse cx="${x}" cy="${y}" rx="11" ry="11" fill="#a3c586" stroke="#4e7d3a" stroke-width="2"/><ellipse cx="${x}" cy="${y}" rx="7" ry="7" fill="#fff" opacity="0.15"/></g>`;
+    }
+    document.getElementById('fw-visual-year').innerHTML = `
+      <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
+      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numMelons} watermelons (5 lbs each)</div>
+    `;
+  });
 });
