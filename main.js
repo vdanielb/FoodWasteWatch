@@ -229,21 +229,89 @@ async function drawFoodWasteMap2023() {
     .style('display', 'none');
 }
 
-function animateFoodWasteFalling(containerId) {
+function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preserveContent = false) {
   const container = d3.select(containerId);
-  container.selectAll('*').remove();
-  const width = 400, height = 400; // Larger size to match container
-  const svg = container.append('svg')
-    .attr('width', width)
-    .attr('height', height);
-
-  // Draw ground/pile base - much wider
-  svg.append('ellipse')
-    .attr('cx', width/2)
-    .attr('cy', height-50)
-    .attr('rx', 160) // Much wider pile area
-    .attr('ry', 35) // Slightly taller as well
-    .attr('fill', '#b5a27a');
+  
+  console.log(`animateFoodWasteFalling called - scale: ${scale}, preserveContent: ${preserveContent}`); // Debug log
+  
+  // Only clear content if we're not preserving it
+  if (!preserveContent) {
+    container.selectAll('*').remove();
+    console.log('Cleared all content'); // Debug log
+  } else {
+    console.log('Preserving existing content'); // Debug log
+  }
+  
+  // Use consistent base dimensions and fixed ground position
+  const baseWidth = 400, baseHeight = 400;
+  const width = baseWidth * scale, height = baseHeight * scale;
+  
+  // Fixed ground position (doesn't scale with container)
+  const fixedGroundY = 350; // Fixed Y position for ground
+  const fixedPileWidth = 160; // Fixed pile width
+  const fixedPileHeight = 35; // Fixed pile height
+  
+  let svg = container.select('svg');
+  
+  // Create SVG if it doesn't exist
+  if (svg.empty()) {
+    console.log('Creating new SVG'); // Debug log
+    svg = container.append('svg')
+      .attr('width', width)
+      .attr('height', height);
+      
+    // Draw ground/pile base - use fixed position
+    svg.append('ellipse')
+      .attr('cx', width/2)
+      .attr('cy', fixedGroundY)
+      .attr('rx', fixedPileWidth * scale)
+      .attr('ry', fixedPileHeight * scale)
+      .attr('fill', '#b5a27a')
+      .attr('class', 'trash-pile-base');
+  } else {
+    console.log('Updating existing SVG'); // Debug log
+    // Update existing SVG size but keep pile at fixed position
+    svg.attr('width', width).attr('height', height);
+    
+    // Update or create the pile base
+    let pileBase = svg.select('.trash-pile-base');
+    if (pileBase.empty()) {
+      pileBase = svg.append('ellipse')
+        .attr('class', 'trash-pile-base');
+    }
+    
+    pileBase
+      .attr('cx', width/2)
+      .attr('cy', fixedGroundY) // Keep at fixed position
+      .attr('rx', fixedPileWidth * scale)
+      .attr('ry', fixedPileHeight * scale)
+      .attr('fill', '#b5a27a');
+      
+    // Update existing circles - only scale their X positions and sizes, keep Y relative to fixed ground
+    const existingCircles = svg.selectAll('.falling-circle');
+    console.log(`Found ${existingCircles.size()} existing circles`); // Debug log
+    
+    existingCircles.each(function() {
+      const currentTransform = d3.select(this).attr('transform');
+      if (currentTransform) {
+        const translate = currentTransform.match(/translate\(([^,]+),([^)]+)\)/);
+        if (translate) {
+          const x = parseFloat(translate[1]);
+          const y = parseFloat(translate[2]);
+          // Scale X position proportionally, but keep Y positions relative to fixed ground
+          const newX = (x / baseWidth) * width;
+          // Keep Y position the same (no scaling for vertical position)
+          d3.select(this).attr('transform', `translate(${newX},${y})`);
+        }
+      }
+    });
+    
+    // Add static trash pile if transitioning to household and preserving content
+    if (preserveContent && scale > 1) {
+      console.log('Adding static trash pile for household section'); // Debug log
+      createStaticTrashPile(svg, width, height, scale, fixedGroundY);
+    }
+  }
 
   // Trash-like colors for circles
   const trashColors = [
@@ -252,8 +320,14 @@ function animateFoodWasteFalling(containerId) {
   ];
 
   function dropCircle() {
-    const x = width/2 + (Math.random()-0.5)*180; // Even wider spread to match the pile
-    const r = 8 + Math.random()*12; // Larger circles
+    // Clean up old circles if there are too many (performance optimization)
+    const existingCircles = svg.selectAll('.falling-circle');
+    if (existingCircles.size() > 100) {
+      existingCircles.filter((d, i) => i < 20).remove(); // Remove oldest 20 circles
+    }
+    
+    const x = width/2 + (Math.random()-0.5)*180*scale; // Scale spread
+    const r = (8 + Math.random()*12) * scale; // Scale circle size
     const color = trashColors[Math.floor(Math.random()*trashColors.length)];
     const g = svg.append('g').attr('class', 'falling-circle');
     g.append('circle')
@@ -264,16 +338,19 @@ function animateFoodWasteFalling(containerId) {
       .attr('opacity', 0.95);
     g.attr('transform', `translate(${x},-30)`);
     
+    // Land at fixed ground position with some randomness
+    const landingY = fixedGroundY - 20 - Math.random()*15; // Much closer to ground (was -60 with -25 random)
+    
     g.transition()
-      .duration(1600) // Slightly slower for better visual impact
+      .duration(scale > 1 ? 1200 : 1600 * (2 - scale*0.5)) // Faster for household (1200ms vs 1600ms)
       .ease(d3.easeBounce)
-      .attr('transform', `translate(${x},${height-60-Math.random()*25})`)
+      .attr('transform', `translate(${x},${landingY})`)
       .on('end', function() {
         d3.select(this).style('opacity', 1);
       });
   }
 
-  return setInterval(dropCircle, 400); // More frequent drops for larger space
+  return setInterval(dropCircle, frequency);
 }
 
 // Function to handle layered scrolling text boxes
@@ -289,8 +366,8 @@ function initLayeredScrolling() {
     
     textBoxes.forEach((box, index) => {
       // Each text box appears at different scroll progress points
-      const startProgress = index * 0.3; // 0, 0.3, 0.6 - more spacing between boxes
-      const endProgress = startProgress + 0.4; // Duration of visibility
+      const startProgress = index * 0.15; // Adjusted for 6 boxes: 0, 0.15, 0.3, 0.45, 0.6, 0.75
+      const endProgress = startProgress + 0.25; // Duration of visibility
       
       if (progress >= startProgress && progress <= endProgress) {
         // Box is active and moving through the viewport
@@ -308,12 +385,27 @@ function initLayeredScrolling() {
           if (index === 0) {
             updateFoodVisualization('day');
             updateTrashSummary('day');
+            updateTrashAnimation('day');
           } else if (index === 1) {
             updateFoodVisualization('month');
             updateTrashSummary('month');
+            updateTrashAnimation('month');
           } else if (index === 2) {
             updateFoodVisualization('year');
             updateTrashSummary('year');
+            updateTrashAnimation('year');
+          } else if (index === 3) {
+            updateFoodVisualization('householdDay');
+            updateTrashSummary('householdDay');
+            updateTrashAnimation('householdDay');
+          } else if (index === 4) {
+            updateFoodVisualization('householdMonth');
+            updateTrashSummary('householdMonth');
+            updateTrashAnimation('householdMonth');
+          } else if (index === 5) {
+            updateFoodVisualization('householdYear');
+            updateTrashSummary('householdYear');
+            updateTrashAnimation('householdYear');
           }
         }
         
@@ -322,12 +414,27 @@ function initLayeredScrolling() {
           if (index === 0 && currentFoodVisualization !== 'day') {
             updateFoodVisualization('day');
             updateTrashSummary('day');
+            updateTrashAnimation('day');
           } else if (index === 1 && currentFoodVisualization !== 'month') {
             updateFoodVisualization('month');
             updateTrashSummary('month');
+            updateTrashAnimation('month');
           } else if (index === 2 && currentFoodVisualization !== 'year') {
             updateFoodVisualization('year');
             updateTrashSummary('year');
+            updateTrashAnimation('year');
+          } else if (index === 3 && currentFoodVisualization !== 'householdDay') {
+            updateFoodVisualization('householdDay');
+            updateTrashSummary('householdDay');
+            updateTrashAnimation('householdDay');
+          } else if (index === 4 && currentFoodVisualization !== 'householdMonth') {
+            updateFoodVisualization('householdMonth');
+            updateTrashSummary('householdMonth');
+            updateTrashAnimation('householdMonth');
+          } else if (index === 5 && currentFoodVisualization !== 'householdYear') {
+            updateFoodVisualization('householdYear');
+            updateTrashSummary('householdYear');
+            updateTrashAnimation('householdYear');
           }
         }
         
@@ -370,9 +477,6 @@ function initLayeredScrolling() {
 
 document.addEventListener('DOMContentLoaded', function() {
   drawFoodWasteMap2023();
-  
-  // Create single fixed trash animation
-  const trashAnimation = animateFoodWasteFalling('#fixed-trash-animation');
 
   // --- Food waste scrollytelling calculations and visuals ---
   d3.csv('data/wastebyyear.csv', d => {
@@ -411,11 +515,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Round for display
     const r = x => Math.round(x);
     
+    // Calculate household amounts (average household size is 2.5 people)
+    const householdSize = 2.5;
+    const perHouseholdDay = perPersonDay * householdSize;
+    const perHouseholdMonth = perPersonMonth * householdSize;
+    const perHouseholdYear = perPersonYear * householdSize;
+    
     // Store values globally for content changes
     window.foodWasteData = {
       day: r(perPersonDay),
       month: r(perPersonMonth),
-      year: r(perPersonYear)
+      year: r(perPersonYear),
+      householdDay: r(perHouseholdDay),
+      householdMonth: r(perHouseholdMonth),
+      householdYear: r(perHouseholdYear)
     };
     
     // Populate the text boxes with calculated values
@@ -423,11 +536,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('month-number').textContent = window.foodWasteData.month;
     document.getElementById('year-number').textContent = window.foodWasteData.year;
     
+    // Populate household text boxes
+    document.getElementById('household-day-number').textContent = window.foodWasteData.householdDay;
+    document.getElementById('household-month-number').textContent = window.foodWasteData.householdMonth;
+    document.getElementById('household-year-number').textContent = window.foodWasteData.householdYear;
+    
     // Initialize both visualizations with day data
     currentFoodVisualization = null; // Reset to ensure updates work
     currentTrashSummary = null; // Reset to ensure updates work
+    currentSection = null; // Reset section tracking
     updateFoodVisualization('day');
     updateTrashSummary('day');
+    updateTrashAnimation('day'); // This will set up the initial animation
     
     // Initialize layered scrolling system
     initLayeredScrolling();
@@ -438,6 +558,8 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentFoodVisualization = null;
 let currentTrashSummary = null;
 let isAnimating = false;
+let currentTrashAnimation = null; // Track current animation interval
+let currentSection = null; // Track current section (person vs household)
 
 // Function to update food visualization based on current step
 function updateFoodVisualization(period) {
@@ -526,6 +648,78 @@ function updateFoodVisualization(period) {
         <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
         <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numMelons} watermelons (5 lbs each)</div>
       `;
+    } else if (period === 'householdDay') {
+      // Household Day: Pizza slices (0.25 lbs each)
+      const sliceWeight = 0.25;
+      const numSlices = Math.max(1, Math.round(window.foodWasteData.householdDay / sliceWeight));
+      let slicesSVG = '';
+      const slicesPerRow = 10;
+      const sliceRows = Math.ceil(numSlices / slicesPerRow);
+      const sliceGridWidth = slicesPerRow * 22;
+      const sliceSVGWidth = 450;
+      const sliceSVGHeight = 280;
+      const sliceXOffset = (sliceSVGWidth - sliceGridWidth) / 2 + 11;
+      const sliceYStart = 40;
+      
+      for (let i = 0; i < numSlices; i++) {
+        const x = sliceXOffset + (i % slicesPerRow) * 22;
+        const y = sliceYStart + Math.floor(i / slicesPerRow) * 30;
+        // Pizza slice shape using path
+        slicesSVG += `<g><path d="M ${x} ${y-10} L ${x+8} ${y+8} L ${x-8} ${y+8} Z" fill="#ff6b35" stroke="#cc4125" stroke-width="1.5"/><circle cx="${x-3}" cy="${y+2}" r="1.5" fill="#dc143c"/><circle cx="${x+2}" cy="${y-2}" r="1" fill="#ffd700"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${sliceSVGWidth}" height="${sliceSVGHeight}" style="display:block;margin:0 auto;">${slicesSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numSlices} pizza slices (0.25 lbs each)</div>
+      `;
+    } else if (period === 'householdMonth') {
+      // Household Month: Roasted chickens (3 lbs each)
+      const chickenWeight = 3;
+      const numChickens = Math.max(1, Math.round(window.foodWasteData.householdMonth / chickenWeight));
+      let chickensSVG = '';
+      const chickensPerCol = 5;
+      const chickensCols = Math.ceil(numChickens / chickensPerCol);
+      const chickenGridWidth = chickensCols * 45;
+      const chickenSVGWidth = 450;
+      const chickenSVGHeight = 280;
+      const chickenXOffset = (chickenSVGWidth - chickenGridWidth) / 2 + 22;
+      const chickenYStart = 40;
+      
+      for (let i = 0; i < numChickens; i++) {
+        const x = chickenXOffset + Math.floor(i / chickensPerCol) * 45;
+        const y = chickenYStart + (i % chickensPerCol) * 35;
+        // Simplified chicken shape
+        chickensSVG += `<g><ellipse cx="${x}" cy="${y}" rx="18" ry="12" fill="#deb887" stroke="#8b7355" stroke-width="2"/><ellipse cx="${x-8}" cy="${y-8}" rx="8" ry="6" fill="#deb887" stroke="#8b7355" stroke-width="2"/><circle cx="${x-12}" cy="${y-10}" r="2" fill="#000"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${chickenSVGWidth}" height="${chickenSVGHeight}" style="display:block;margin:0 auto;">${chickensSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numChickens} roasted chickens (3 lbs each)</div>
+      `;
+    } else if (period === 'householdYear') {
+      // Household Year: Grocery bags (15 lbs each)
+      const bagWeight = 15;
+      const numBags = Math.max(1, Math.round(window.foodWasteData.householdYear / bagWeight));
+      let bagsSVG = '';
+      const bagsPerCol = 6; // Increased to 6 to create more rows and reduce width
+      const bagsCols = Math.ceil(numBags / bagsPerCol);
+      const bagGridWidth = bagsCols * 42; // Reduced spacing further
+      const bagSVGWidth = 580; // Keep same width
+      const bagSVGHeight = 450; // Keep same height
+      const bagXOffset = (bagSVGWidth - bagGridWidth) / 2 + 21; // Better centering
+      const bagYStart = 60; // Reduced top margin slightly
+      
+      for (let i = 0; i < numBags; i++) {
+        const x = bagXOffset + Math.floor(i / bagsPerCol) * 42; // Reduced spacing
+        const y = bagYStart + (i % bagsPerCol) * 40; // Reduced vertical spacing
+        // Grocery bag shape - even smaller size to fit better
+        bagsSVG += `<g><rect x="${x-12}" y="${y-3}" width="24" height="18" rx="2.5" fill="#8b4513" stroke="#654321" stroke-width="1.2"/><rect x="${x-9}" y="${y-12}" width="18" height="10" fill="#deb887" stroke="#8b7355" stroke-width="1"/><line x1="${x-6}" y1="${y-9}" x2="${x+6}" y2="${y-9}" stroke="#4a4a4a" stroke-width="1.5" stroke-linecap="round"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${bagSVGWidth}" height="${bagSVGHeight}" style="display:block;margin:0 auto;">${bagsSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numBags} full grocery bags (15 lbs each)</div>
+      `;
     }
     
     // Fade-in animation after content change
@@ -571,6 +765,15 @@ function updateTrashSummary(period) {
       case 'year':
         summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.year}</span> lbs of food wasted per year`;
         break;
+      case 'householdDay':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdDay}</span> lbs of food wasted per household per day`;
+        break;
+      case 'householdMonth':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdMonth}</span> lbs of food wasted per household per month`;
+        break;
+      case 'householdYear':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdYear}</span> lbs of food wasted per household per year`;
+        break;
     }
     
     // Fade back in
@@ -579,4 +782,68 @@ function updateTrashSummary(period) {
       summaryElement.style.transform = 'scale(1)';
     }, 50);
   }, 150);
+}
+
+// Function to update the trash animation scale based on section
+function updateTrashAnimation(period) {
+  // Determine which section we're in
+  const newSection = period.includes('household') ? 'household' : 'person';
+  
+  // Only update if we're actually switching sections OR if no animation exists yet
+  if (newSection !== currentSection || !currentTrashAnimation) {
+    console.log(`Transitioning from ${currentSection} to ${newSection}`); // Debug log
+    
+    // Clear existing animation interval
+    if (currentTrashAnimation) {
+      clearInterval(currentTrashAnimation);
+    }
+    
+    let scale = 1;
+    let frequency = 400;
+    let preserveContent = false;
+    
+    if (newSection === 'household') {
+      scale = 1.3; // 30% larger for household
+      frequency = 150; // Much faster drops (was 250ms, now 150ms)
+      preserveContent = (currentSection === 'person'); // Preserve if transitioning from person
+      console.log(`Household section - preserveContent: ${preserveContent}`); // Debug log
+    } else {
+      scale = 1; // Normal size for person
+      frequency = 400; // Normal frequency
+      preserveContent = false; // Always start fresh for person section
+      console.log(`Person section - starting fresh`); // Debug log
+    }
+    
+    // Start new animation with updated parameters
+    currentTrashAnimation = animateFoodWasteFalling('#fixed-trash-animation', scale, frequency, preserveContent);
+    currentSection = newSection;
+  }
+  // If we're in the same section, do nothing - let the animation continue
+}
+
+// Function to create a static trash pile for household section
+function createStaticTrashPile(svg, width, height, scale, fixedGroundY) {
+  const trashColors = [
+    '#b5a27a', '#e0e0e0', '#7fd3e6', '#a3c586', '#f5e6c8', '#b0b0b0',
+    '#fffbe6', '#ffe066', '#e74c3c', '#6a7b8c', '#e2b07a', '#e0f7fa'
+  ];
+  
+  // Create 25-35 static circles at the base to simulate accumulated trash (increased from 15-20)
+  const numStaticCircles = 25 + Math.floor(Math.random() * 11); // 25-35 circles
+  
+  for (let i = 0; i < numStaticCircles; i++) {
+    const x = width/2 + (Math.random()-0.5)*140*scale; // Spread around center
+    const y = fixedGroundY - 5 - Math.random()*25; // Closer to ground (was -10)
+    const r = (6 + Math.random()*8) * scale; // Varied sizes
+    const color = trashColors[Math.floor(Math.random()*trashColors.length)];
+    
+    const g = svg.append('g').attr('class', 'falling-circle static-trash');
+    g.append('circle')
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('r', r)
+      .attr('fill', color)
+      .attr('opacity', 0.9); // Slightly less opaque for static trash
+    g.attr('transform', `translate(${x},${y})`);
+  }
 }
