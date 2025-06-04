@@ -229,4 +229,58 @@ async function drawFoodWasteMap2023() {
     .style('display', 'none');
 }
 
-drawFoodWasteMap2023();
+function animateFoodWasteFalling() {
+  const container = d3.select('#food-waste-animation');
+  container.selectAll('*').remove();
+  const width = 400, height = 200;
+  const svg = container.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  // Draw ground/pile base
+  const groundColor = '#b5a27a';
+  svg.append('ellipse')
+    .attr('cx', width/2)
+    .attr('cy', height-20)
+    .attr('rx', 80)
+    .attr('ry', 25)
+    .attr('fill', groundColor);
+
+  // Only circles, same color as ground
+  function dropCircle() {
+    const x = width/2 + (Math.random()-0.5)*120;
+    const r = 8 + Math.random()*10;
+    const g = svg.append('g').attr('class', 'falling-circle');
+    g.append('circle')
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('r', r)
+      .attr('fill', groundColor)
+      .attr('opacity', 0.95);
+    g.attr('transform', `translate(${x},-30)`);
+    // Animate falling
+    g.transition()
+      .duration(1200)
+      .ease(d3.easeBounce)
+      .attr('transform', `translate(${x},${height-40-Math.random()*10})`)
+      .on('end', function() {
+        // Add to pile (keep on screen, fade a bit)
+        d3.select(this)
+          .transition().duration(300)
+          .style('opacity', 0.7)
+          .on('end', function() {
+            // Optionally: limit pile size
+            if (svg.selectAll('g.falling-circle').size() > 30) {
+              svg.select('g.falling-circle').remove();
+            }
+          });
+      });
+  }
+
+  setInterval(dropCircle, 700);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  drawFoodWasteMap2023();
+  animateFoodWasteFalling();
+});
