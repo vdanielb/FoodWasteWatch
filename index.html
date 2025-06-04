@@ -13,9 +13,32 @@
 
 <body>
   <div class="newspaper-header">
-    <h1>The Antiko Times</h1>
+    <button class="menu-toggle" id="menu-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <h1><a href="index.html" class="home-link">The Antiko Times</a></h1>
   </div>
-  <header>
+
+  <!-- Sidebar Menu -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Menu</h2>
+      <button class="close-menu" id="close-menu">&times;</button>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="#header">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://insights.refed.org" target="_blank">Data</a></li>
+      <li><a href="https://github.com/vdanielb/FoodWasteWatch" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overlay for sidebar -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <header id="header">
     <img src="images/food waste.webp" alt="Food Waste Visualization" class="header-image">
     <h1>Food Waste in the United States</h1>
     <h2 class="subtitle">A Visual Exploration of America's Food Waste Crisis</h2>

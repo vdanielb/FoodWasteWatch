@@ -476,6 +476,9 @@ function initLayeredScrolling() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize sidebar menu
+  initSidebarMenu();
+  
   drawFoodWasteMap2023();
 
   // --- Food waste scrollytelling calculations and visuals ---
@@ -846,4 +849,84 @@ function createStaticTrashPile(svg, width, height, scale, fixedGroundY) {
       .attr('opacity', 0.9); // Slightly less opaque for static trash
     g.attr('transform', `translate(${x},${y})`);
   }
+}
+
+// Sidebar Menu Functionality
+function initSidebarMenu() {
+  const menuToggle = document.getElementById('menu-toggle');
+  const closeMenu = document.getElementById('close-menu');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const menuLinks = document.querySelectorAll('.sidebar-menu a[href^="#"]');
+
+  // Open sidebar
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    menuToggle.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  // Close sidebar
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    menuToggle.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+
+  // Toggle sidebar
+  menuToggle.addEventListener('click', () => {
+    if (sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  // Close sidebar when clicking close button
+  closeMenu.addEventListener('click', closeSidebar);
+
+  // Close sidebar when clicking overlay
+  overlay.addEventListener('click', closeSidebar);
+
+  // Handle menu link clicks
+  menuLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        closeSidebar();
+        
+        // Smooth scroll to target section
+        const targetId = href.substring(1);
+        const targetElement = document.getElementById(targetId) || document.querySelector(href);
+        
+        if (targetElement) {
+          // Add some offset for the fixed header
+          const headerHeight = document.querySelector('.newspaper-header').offsetHeight;
+          const targetPosition = targetElement.offsetTop - headerHeight - 20;
+          
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          });
+        }
+      } else if (href && !href.startsWith('http') && !href.includes('://')) {
+        // Handle relative page links (like about.html)
+        closeSidebar();
+        // Let the browser handle the navigation naturally
+      } else {
+        // External links - close sidebar but let browser handle
+        closeSidebar();
+      }
+    });
+  });
+
+  // Close sidebar on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+      closeSidebar();
+    }
+  });
 }
