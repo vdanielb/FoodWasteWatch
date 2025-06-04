@@ -229,41 +229,31 @@ async function drawFoodWasteMap2023() {
     .style('display', 'none');
 }
 
-function animateFoodWasteFalling() {
-  const container = d3.select('#food-waste-animation');
+function animateFoodWasteFalling(containerId) {
+  const container = d3.select(containerId);
   container.selectAll('*').remove();
-  const width = 400, height = 200;
+  const width = 400, height = 400; // Larger size to match container
   const svg = container.append('svg')
     .attr('width', width)
     .attr('height', height);
 
-  // Draw ground/pile base
+  // Draw ground/pile base - much wider
   svg.append('ellipse')
     .attr('cx', width/2)
-    .attr('cy', height-20)
-    .attr('rx', 80)
-    .attr('ry', 25)
+    .attr('cy', height-50)
+    .attr('rx', 160) // Much wider pile area
+    .attr('ry', 35) // Slightly taller as well
     .attr('fill', '#b5a27a');
 
   // Trash-like colors for circles
   const trashColors = [
-    '#b5a27a', // brown (paper bag, cardboard)
-    '#e0e0e0', // light gray (paper, plastic)
-    '#7fd3e6', // blue (recycling, bottles)
-    '#a3c586', // green (organic, glass)
-    '#f5e6c8', // beige (food, napkins)
-    '#b0b0b0', // gray (metal, can)
-    '#fffbe6', // off-white (styrofoam, paper)
-    '#ffe066', // yellow (plastic, wrappers)
-    '#e74c3c', // red (labels, packaging)
-    '#6a7b8c', // dark gray (metal, can)
-    '#e2b07a', // tan (box)
-    '#e0f7fa'  // light blue (plastic bag)
+    '#b5a27a', '#e0e0e0', '#7fd3e6', '#a3c586', '#f5e6c8', '#b0b0b0',
+    '#fffbe6', '#ffe066', '#e74c3c', '#6a7b8c', '#e2b07a', '#e0f7fa'
   ];
 
   function dropCircle() {
-    const x = width/2 + (Math.random()-0.5)*120;
-    const r = 8 + Math.random()*10;
+    const x = width/2 + (Math.random()-0.5)*180; // Even wider spread to match the pile
+    const r = 8 + Math.random()*12; // Larger circles
     const color = trashColors[Math.floor(Math.random()*trashColors.length)];
     const g = svg.append('g').attr('class', 'falling-circle');
     g.append('circle')
@@ -273,22 +263,116 @@ function animateFoodWasteFalling() {
       .attr('fill', color)
       .attr('opacity', 0.95);
     g.attr('transform', `translate(${x},-30)`);
-    // Animate falling
+    
     g.transition()
-      .duration(1200)
+      .duration(1600) // Slightly slower for better visual impact
       .ease(d3.easeBounce)
-      .attr('transform', `translate(${x},${height-40-Math.random()*10})`)
+      .attr('transform', `translate(${x},${height-60-Math.random()*25})`)
       .on('end', function() {
         d3.select(this).style('opacity', 1);
       });
   }
 
-  setInterval(dropCircle, 700);
+  return setInterval(dropCircle, 400); // More frequent drops for larger space
+}
+
+// Function to handle layered scrolling text boxes
+function initLayeredScrolling() {
+  const scrollContainer = document.getElementById('scrolly-foodwaste');
+  const textBoxes = document.querySelectorAll('.moving-text-box');
+  
+  function updateTextBoxPositions() {
+    const scrollTop = window.pageYOffset;
+    const containerTop = scrollContainer.offsetTop;
+    const containerHeight = scrollContainer.offsetHeight;
+    const progress = Math.max(0, Math.min(1, (scrollTop - containerTop) / (containerHeight * 0.8)));
+    
+    textBoxes.forEach((box, index) => {
+      // Each text box appears at different scroll progress points
+      const startProgress = index * 0.3; // 0, 0.3, 0.6 - more spacing between boxes
+      const endProgress = startProgress + 0.4; // Duration of visibility
+      
+      if (progress >= startProgress && progress <= endProgress) {
+        // Box is active and moving through the viewport
+        const boxProgress = (progress - startProgress) / (endProgress - startProgress);
+        
+        // Move from bottom of screen (100vh) to top of screen (-20vh)
+        const topPosition = 100 - (boxProgress * 120); // vh units
+        
+        box.style.top = `${topPosition}vh`;
+        box.style.opacity = 1;
+        box.classList.add('active');
+        
+        // Update food visualization based on active text box
+        if (boxProgress >= 0.25 && boxProgress <= 0.75) {
+          if (index === 0) {
+            updateFoodVisualization('day');
+            updateTrashSummary('day');
+          } else if (index === 1) {
+            updateFoodVisualization('month');
+            updateTrashSummary('month');
+          } else if (index === 2) {
+            updateFoodVisualization('year');
+            updateTrashSummary('year');
+          }
+        }
+        
+        // Also update during the main visibility period to ensure sync
+        if (boxProgress >= 0.15 && boxProgress <= 0.85) {
+          if (index === 0 && currentFoodVisualization !== 'day') {
+            updateFoodVisualization('day');
+            updateTrashSummary('day');
+          } else if (index === 1 && currentFoodVisualization !== 'month') {
+            updateFoodVisualization('month');
+            updateTrashSummary('month');
+          } else if (index === 2 && currentFoodVisualization !== 'year') {
+            updateFoodVisualization('year');
+            updateTrashSummary('year');
+          }
+        }
+        
+        // Fade effects at edges
+        if (boxProgress < 0.1 || boxProgress > 0.9) {
+          box.style.opacity = 0.4;
+        }
+      } else if (progress > endProgress) {
+        // Box has passed through - position above screen
+        box.style.top = '-20vh';
+        box.style.opacity = 0;
+        box.classList.remove('active');
+        box.classList.add('passing');
+      } else {
+        // Box hasn't arrived yet - position below screen
+        box.style.top = '100vh';
+        box.style.opacity = 0;
+        box.classList.remove('active', 'passing');
+      }
+    });
+  }
+  
+  // Listen for scroll events with throttling for better performance
+  let ticking = false;
+  function handleScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateTextBoxPositions();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  
+  window.addEventListener('scroll', handleScroll);
+  
+  // Initial position update
+  updateTextBoxPositions();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   drawFoodWasteMap2023();
-  animateFoodWasteFalling();
+  
+  // Create single fixed trash animation
+  const trashAnimation = animateFoodWasteFalling('#fixed-trash-animation');
 
   // --- Food waste scrollytelling calculations and visuals ---
   d3.csv('data/wastebyyear.csv', d => {
@@ -326,74 +410,173 @@ document.addEventListener('DOMContentLoaded', function() {
     const perPersonMonth = perPersonDay * 30;
     // Round for display
     const r = x => Math.round(x);
-    document.querySelector('.fw-day').textContent = r(perPersonDay);
-    document.querySelector('.fw-month').textContent = r(perPersonMonth);
-    document.querySelector('.fw-year').textContent = r(perPersonYear);
-
-    // --- Visualizations with real-world food equivalents ---
-    // Day: Apples (0.33 lbs each)
-    const appleWeight = 0.33;
-    const numApples = Math.max(1, Math.round(perPersonDay / appleWeight));
-    let applesSVG = '';
-    const applesPerRow = 10;
-    const appleRows = Math.ceil(numApples / applesPerRow);
-    const appleGridWidth = applesPerRow * 15;
-    const appleSVGWidth = 200;
-    const appleSVGHeight = 60;
-    const appleXOffset = (appleSVGWidth - appleGridWidth) / 2 + 7.5;
-    const appleYStart = (appleSVGHeight - (appleRows * 18)) / 2 + 15;
-    for (let i = 0; i < numApples; i++) {
-      const x = appleXOffset + (i % applesPerRow) * 15;
-      const y = appleYStart + Math.floor(i / applesPerRow) * 18;
-      applesSVG += `<g><ellipse cx="${x}" cy="${y}" rx="7" ry="7" fill="#e74c3c" stroke="#b53c2e" stroke-width="1.5"/><rect x="${x-1.5}" y="${y-10}" width="3" height="6" fill="#8e5a1d"/></g>`;
-    }
-    document.getElementById('fw-visual-day').innerHTML = `
-      <div style="text-align:center;">
-        <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
-      </div>
-      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numApples} apples (0.33 lbs each)</div>
-    `;
     
-    // Month: Loaves of bread (1 lb each), wider grid layout
-    const loafWeight = 1;
-    const numLoaves = Math.max(1, Math.round(perPersonMonth / loafWeight));
-    let loavesSVG = '';
-    const loavesPerCol = 4;
-    const loavesCols = Math.ceil(numLoaves / loavesPerCol);
-    const loafGridWidth = loavesCols * 22;
-    const loafSVGWidth = 400;
-    const loafSVGHeight = 100;
-    const loafXOffset = (loafSVGWidth - loafGridWidth) / 2 + 11;
-    const loafYStart = (loafSVGHeight - (loavesPerCol * 18)) / 2 + 15;
-    for (let i = 0; i < numLoaves; i++) {
-      const x = loafXOffset + Math.floor(i / loavesPerCol) * 22;
-      const y = loafYStart + (i % loavesPerCol) * 18;
-      loavesSVG += `<g><rect x="${x-8}" y="${y-7}" width="16" height="14" rx="5" fill="#e2b07a" stroke="#a67c52" stroke-width="1.5"/><ellipse cx="${x}" cy="${y-7}" rx="8" ry="5" fill="#fffbe6" opacity="0.7"/></g>`;
-    }
-    document.getElementById('fw-visual-month').innerHTML = `
-      <svg width="${loafSVGWidth}" height="${loafSVGHeight}" style="display:block;margin:0 auto;">${loavesSVG}</svg>
-      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numLoaves} loaves of bread (1 lb each)</div>
-    `;
+    // Store values globally for content changes
+    window.foodWasteData = {
+      day: r(perPersonDay),
+      month: r(perPersonMonth),
+      year: r(perPersonYear)
+    };
     
-    // Year: Watermelons (5 lbs each), wider grid layout
-    const melonWeight = 5;
-    const numMelons = Math.max(1, Math.round(perPersonYear / melonWeight));
-    let melonsSVG = '';
-    const melonsPerCol = 6;
-    const melonsCols = Math.ceil(numMelons / melonsPerCol);
-    const melonGridWidth = melonsCols * 28;
-    const melonSVGWidth = 500;
-    const melonSVGHeight = 280;
-    const melonXOffset = (melonSVGWidth - melonGridWidth) / 2 + 14;
-    const melonYStart = 30;
-    for (let i = 0; i < numMelons; i++) {
-      const x = melonXOffset + Math.floor(i / melonsPerCol) * 28;
-      const y = melonYStart + (i % melonsPerCol) * 22;
-      melonsSVG += `<g><ellipse cx="${x}" cy="${y}" rx="11" ry="11" fill="#a3c586" stroke="#4e7d3a" stroke-width="2"/><ellipse cx="${x}" cy="${y}" rx="7" ry="7" fill="#fff" opacity="0.15"/></g>`;
-    }
-    document.getElementById('fw-visual-year').innerHTML = `
-      <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
-      <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numMelons} watermelons (5 lbs each)</div>
-    `;
+    // Populate the text boxes with calculated values
+    document.getElementById('day-number').textContent = window.foodWasteData.day;
+    document.getElementById('month-number').textContent = window.foodWasteData.month;
+    document.getElementById('year-number').textContent = window.foodWasteData.year;
+    
+    // Initialize both visualizations with day data
+    currentFoodVisualization = null; // Reset to ensure updates work
+    currentTrashSummary = null; // Reset to ensure updates work
+    updateFoodVisualization('day');
+    updateTrashSummary('day');
+    
+    // Initialize layered scrolling system
+    initLayeredScrolling();
   });
 });
+
+// Global variable to track current food visualization and prevent rapid switching
+let currentFoodVisualization = null;
+let currentTrashSummary = null;
+let isAnimating = false;
+
+// Function to update food visualization based on current step
+function updateFoodVisualization(period) {
+  // Don't switch if we're already showing this period or currently animating
+  if (currentFoodVisualization === period || isAnimating) {
+    return;
+  }
+  
+  isAnimating = true;
+  currentFoodVisualization = period;
+  
+  const container = document.getElementById('food-visualization-area');
+  
+  // Add fade-out animation before changing content
+  container.style.opacity = '0.3';
+  container.style.transform = 'scale(0.95)';
+  
+  // Wait for fade-out, then change content and fade-in
+  setTimeout(() => {
+    if (period === 'day') {
+      // Day: Apples (0.33 lbs each)
+      const appleWeight = 0.33;
+      const numApples = Math.max(1, Math.round(window.foodWasteData.day / appleWeight));
+      let applesSVG = '';
+      const applesPerRow = 8; // More apples per row for larger space
+      const appleRows = Math.ceil(numApples / applesPerRow);
+      const appleGridWidth = applesPerRow * 25; // Increased spacing
+      const appleSVGWidth = 450; // Much larger width
+      const appleSVGHeight = 250; // Increased height
+      const appleXOffset = (appleSVGWidth - appleGridWidth) / 2 + 12;
+      const appleYStart = 40; // Better positioning
+      
+      for (let i = 0; i < numApples; i++) {
+        const x = appleXOffset + (i % applesPerRow) * 25; // Increased spacing
+        const y = appleYStart + Math.floor(i / applesPerRow) * 30; // Increased row spacing
+        applesSVG += `<g><ellipse cx="${x}" cy="${y}" rx="11" ry="11" fill="#e74c3c" stroke="#b53c2e" stroke-width="2.5"/><rect x="${x-2.5}" y="${y-15}" width="5" height="10" fill="#8e5a1d"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numApples} apples (0.33 lbs each)</div>
+      `;
+    } else if (period === 'month') {
+      // Month: Loaves of bread (1 lb each)
+      const loafWeight = 1;
+      const numLoaves = Math.max(1, Math.round(window.foodWasteData.month / loafWeight));
+      let loavesSVG = '';
+      const loavesPerCol = 6; // More per column for larger space
+      const loavesCols = Math.ceil(numLoaves / loavesPerCol);
+      const loafGridWidth = loavesCols * 35; // Increased spacing
+      const loafSVGWidth = 450; // Much larger width
+      const loafSVGHeight = 280; // Increased height
+      const loafXOffset = (loafSVGWidth - loafGridWidth) / 2 + 17;
+      const loafYStart = 40;
+      
+      for (let i = 0; i < numLoaves; i++) {
+        const x = loafXOffset + Math.floor(i / loavesPerCol) * 35; // Increased spacing
+        const y = loafYStart + (i % loavesPerCol) * 30; // Increased spacing
+        loavesSVG += `<g><rect x="${x-12}" y="${y-10}" width="24" height="20" rx="7" fill="#e2b07a" stroke="#a67c52" stroke-width="2.5"/><ellipse cx="${x}" cy="${y-10}" rx="12" ry="7" fill="#fffbe6" opacity="0.7"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${loafSVGWidth}" height="${loafSVGHeight}" style="display:block;margin:0 auto;">${loavesSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numLoaves} loaves of bread (1 lb each)</div>
+      `;
+    } else if (period === 'year') {
+      // Year: Watermelons (5 lbs each)
+      const melonWeight = 5;
+      const numMelons = Math.max(1, Math.round(window.foodWasteData.year / melonWeight));
+      let melonsSVG = '';
+      const melonsPerCol = 8; // More per column for larger space
+      const melonsCols = Math.ceil(numMelons / melonsPerCol);
+      const melonGridWidth = melonsCols * 40; // Increased spacing
+      const melonSVGWidth = 480; // Much larger width
+      const melonSVGHeight = 320; // Increased height
+      const melonXOffset = (melonSVGWidth - melonGridWidth) / 2 + 20;
+      const melonYStart = 40;
+      
+      for (let i = 0; i < numMelons; i++) {
+        const x = melonXOffset + Math.floor(i / melonsPerCol) * 40; // Increased spacing
+        const y = melonYStart + (i % melonsPerCol) * 32; // Increased spacing
+        melonsSVG += `<g><ellipse cx="${x}" cy="${y}" rx="16" ry="16" fill="#a3c586" stroke="#4e7d3a" stroke-width="3"/><ellipse cx="${x}" cy="${y}" rx="10" ry="10" fill="#fff" opacity="0.15"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numMelons} watermelons (5 lbs each)</div>
+      `;
+    }
+    
+    // Fade-in animation after content change
+    setTimeout(() => {
+      container.style.opacity = '1';
+      container.style.transform = 'scale(1)';
+      
+      // Reset animation flag after fade-in completes
+      setTimeout(() => {
+        isAnimating = false;
+      }, 200);
+    }, 50); // Small delay to ensure content is rendered
+    
+  }, 200); // Wait for fade-out animation
+}
+
+// Function to update the trash summary text
+function updateTrashSummary(period) {
+  // Don't update if we're already showing this period or currently animating
+  if (currentTrashSummary === period) {
+    return;
+  }
+  
+  currentTrashSummary = period;
+  
+  const summaryElement = document.getElementById('trash-summary');
+  const amountElement = document.getElementById('summary-amount');
+  
+  if (!window.foodWasteData) return;
+  
+  // Add fade-out animation
+  summaryElement.style.opacity = '0.4';
+  summaryElement.style.transform = 'scale(0.95)';
+  
+  setTimeout(() => {
+    switch(period) {
+      case 'day':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.day}</span> lb of food wasted per day`;
+        break;
+      case 'month':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.month}</span> lbs of food wasted per month`;
+        break;
+      case 'year':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.year}</span> lbs of food wasted per year`;
+        break;
+    }
+    
+    // Fade back in
+    setTimeout(() => {
+      summaryElement.style.opacity = '1';
+      summaryElement.style.transform = 'scale(1)';
+    }, 50);
+  }, 150);
+}

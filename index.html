@@ -9,6 +9,306 @@
   <script defer src="https://unpkg.com/topojson-client@3"></script>
   <script defer src="scrollytelling.js"></script>
   <script defer src="main.js"></script>
+  <style>
+    #scrolly-foodwaste {
+      position: relative;
+      min-height: 500vh; /* Extended height for more scrolling space */
+      max-width: 100vw; /* Use full viewport width */
+      margin: 0; /* Remove margins */
+      padding: 0; /* Remove padding */
+      width: 100%;
+    }
+    
+    /* Fixed layout container */
+    .fixed-layout {
+      position: sticky;
+      top: 50vh;
+      transform: translateY(-50%);
+      display: grid;
+      grid-template-columns: 500px 1fr 550px; /* trash area larger | empty space | food icons */
+      gap: 80px; /* Increased gap to push elements further apart */
+      align-items: center;
+      justify-content: space-between; /* Space elements to edges */
+      height: 450px; /* Increased height */
+      width: 100vw; /* Full viewport width */
+      max-width: none; /* Remove max-width constraint */
+      margin: 0;
+      padding: 0 2px; /* Minimal padding to allow maximum left space */
+      pointer-events: none; /* Allow text boxes to pass through */
+      box-sizing: border-box;
+    }
+    
+    /* Container for trash animation and summary text */
+    .trash-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center both elements */
+      gap: 20px;
+      pointer-events: auto;
+      margin-left: -80px; /* Push much further left */
+      width: 100%;
+    }
+    
+    /* Fixed trash animation on the left */
+    .fixed-trash-animation {
+      width: 400px; /* Enlarged */
+      height: 400px; /* Enlarged */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent; /* Removed background */
+      border-radius: 0; /* Removed border radius */
+      box-shadow: none; /* Removed shadow/border */
+      pointer-events: auto; /* Re-enable for this element */
+    }
+    
+    /* Summary text below trash animation */
+    .trash-summary {
+      text-align: center;
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #555;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 25px;
+      border-radius: 0; /* Sharp edges to match design */
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      min-width: 200px;
+      width: fit-content; /* Allow text to determine width */
+      margin: 0 auto; /* Center within the container */
+    }
+    
+    .trash-summary .amount {
+      color: #e74c3c;
+      font-weight: 700;
+      font-size: 1.1em;
+    }
+    
+    /* Food visualization area on the right */
+    .food-visualization-area {
+      width: 550px; /* Much larger width to use available space */
+      height: 400px; /* Increased height to match trash animation */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: transparent; /* Removed background to match trash animation */
+      border-radius: 0; /* Removed border radius */
+      box-shadow: none; /* Removed shadow/border */
+      transition: all 0.3s ease, opacity 0.2s ease, transform 0.2s ease; /* Added smooth transitions */
+      padding: 30px; /* Increased padding for better spacing */
+      pointer-events: auto; /* Re-enable for this element */
+      margin-left: auto; /* Push to far right */
+    }
+    
+    /* Moving text boxes - now free to move across entire viewport */
+    .moving-text-box {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 520px; /* Reduced from 600px */
+      max-width: 90vw;
+      padding: 35px 40px; /* Reduced padding */
+      text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-radius: 0; /* Sharp edges - removed border radius */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transition: transform 0.1s ease, opacity 0.3s ease;
+      /* Initially positioned below the screen */
+      top: 100vh;
+      z-index: 100;
+      opacity: 0;
+    }
+    
+    .moving-text-box h2 {
+      font-size: 1.6em; /* Reduced from 2em */
+      margin: 0;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #333;
+    }
+    
+    /* Active state for visible text box */
+    .moving-text-box.active {
+      opacity: 1;
+    }
+    
+    .moving-text-box.passing {
+      opacity: 0.3;
+    }
+    
+    /* Extended scroll area for text movement */
+    .extended-scroll-area {
+      height: 200vh; /* Additional scrolling space */
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Enhanced text highlighting for numbers */
+    .fw-day, .fw-month, .fw-year {
+      color: #e74c3c;
+      font-weight: 900;
+      text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    /* Animation classes for content changes */
+    .content-changing .food-visualization-area {
+      transform: scale(1.03);
+    }
+    
+    .content-changing .fixed-trash-animation {
+      transform: scale(1.02);
+    }
+    
+    /* Invisible scroll triggers */
+    .scroll-trigger {
+      height: 80vh;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 1400px) {
+      .fixed-layout {
+        grid-template-columns: 450px 1fr 500px;
+        gap: 60px;
+        padding: 0 2px;
+      }
+      
+      .trash-container {
+        margin-left: -60px; /* Much further left for smaller screens */
+      }
+      
+      .fixed-trash-animation {
+        width: 350px;
+        height: 350px;
+      }
+      
+      .food-visualization-area {
+        width: 450px;
+        height: 350px;
+        padding: 25px;
+      }
+      
+      .trash-summary {
+        font-size: 1.2em;
+        padding: 12px 20px;
+      }
+      
+      .moving-text-box {
+        width: 450px; /* Reduced */
+        padding: 30px 35px; /* Reduced padding */
+      }
+      
+      .moving-text-box h2 {
+        font-size: 1.5em; /* Reduced */
+      }
+    }
+    
+    @media (max-width: 1200px) {
+      .fixed-layout {
+        grid-template-columns: 400px 1fr 400px;
+        gap: 40px;
+        padding: 0 1px;
+      }
+      
+      .trash-container {
+        margin-left: -50px; /* Much further left for smaller screens */
+      }
+      
+      .fixed-trash-animation {
+        width: 300px;
+        height: 300px;
+      }
+      
+      .food-visualization-area {
+        width: 350px;
+        height: 300px;
+        padding: 20px;
+      }
+      
+      .trash-summary {
+        font-size: 1.1em;
+        padding: 10px 18px;
+      }
+      
+      .moving-text-box {
+        width: 380px; /* Reduced */
+        padding: 25px 30px; /* Reduced padding */
+      }
+      
+      .moving-text-box h2 {
+        font-size: 1.4em; /* Reduced */
+      }
+    }
+    
+    @media (max-width: 1000px) {
+      .fixed-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        gap: 40px;
+        height: auto;
+        padding: 20px;
+        justify-content: center; /* Center on mobile */
+      }
+      
+      .trash-container {
+        order: 1;
+        margin-left: 0; /* Reset on mobile */
+        align-items: center; /* Ensure centering on mobile */
+      }
+      
+      .food-visualization-area {
+        order: 2;
+      }
+      
+      .fixed-trash-animation,
+      .food-visualization-area {
+        width: 100%;
+        max-width: 400px;
+        justify-self: center;
+        margin-left: 0; /* Reset margin on mobile */
+      }
+      
+      .trash-summary {
+        font-size: 1.0em;
+        padding: 8px 15px;
+      }
+      
+      .moving-text-box {
+        width: 320px; /* Reduced */
+        padding: 20px 25px; /* Reduced padding */
+      }
+      
+      .moving-text-box h2 {
+        font-size: 1.3em; /* Reduced */
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .fixed-trash-animation,
+      .food-visualization-area {
+        height: 250px;
+        max-width: 350px;
+      }
+      
+      .trash-summary {
+        font-size: 0.9em;
+        padding: 6px 12px;
+      }
+      
+      .moving-text-box {
+        width: 300px; /* Reduced */
+        padding: 18px 22px; /* Reduced padding */
+      }
+      
+      .moving-text-box h2 {
+        font-size: 1.2em; /* Reduced */
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -29,18 +329,37 @@
   </header>
 
   <section id="scrolly-foodwaste" class="scrollytelling">
-    <div class="scrolly-step step" id="scrolly-day" data-step="intro-1">
-      <h2>The average American wastes about <span class="fw-day">XX</span> lbs of food per day.</h2>
-      <div class="fw-visual" id="fw-visual-day"></div>
+    <!-- Fixed layout that stays in place while scrolling -->
+    <div class="fixed-layout">
+      <!-- Container for trash animation and summary text -->
+      <div class="trash-container">
+        <!-- Fixed trash animation on the left -->
+        <div class="fixed-trash-animation" id="fixed-trash-animation"></div>
+        <!-- Summary text that updates with current period -->
+        <div class="trash-summary" id="trash-summary">
+          <span class="amount" id="summary-amount">1</span> lb of food wasted per day
+        </div>
+      </div>
+      
+      <!-- Food visualization area on the right -->
+      <div class="food-visualization-area" id="food-visualization-area"></div>
     </div>
-    <div class="scrolly-step step" id="scrolly-month" data-step="intro-2">
-      <h2>In a month, that's <span class="fw-month">XX</span> lbs of food wasted.</h2>
-      <div class="fw-visual" id="fw-visual-month"></div>
+    
+    <!-- Moving text boxes that scroll through the entire viewport -->
+    <div class="moving-text-box" id="text-box-1">
+      <h2>The average American wastes around <span class="fw-day" id="day-number">XX</span> lb of food per day. It may not seem like much at first glance...</h2>
     </div>
-    <div class="scrolly-step step scrolly-year" id="scrolly-year" data-step="intro-3">
-      <h2>Over a year, over <span class="fw-year">XX</span> lbs of food waste is compiled.</h2>
-      <div class="fw-visual" id="fw-visual-year"></div>
+    
+    <div class="moving-text-box" id="text-box-2">
+      <h2>But over the course of a month, this seemingly small amount accumulates to <span class="fw-month" id="month-number">XX</span> lbs of perfectly good food thrown away.</h2>
     </div>
+    
+    <div class="moving-text-box" id="text-box-3">
+      <h2>And in a single year? That daily waste compounds into a staggering <span class="fw-year" id="year-number">XX</span> lbs of food discarded per person, enough to feed families for weeks.</h2>
+    </div>
+    
+    <!-- Extended scroll area for the text movement -->
+    <div class="extended-scroll-area"></div>
   </section>
 
   <div class="map-container">
