@@ -348,7 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
       applesSVG += `<g><ellipse cx="${x}" cy="${y}" rx="7" ry="7" fill="#e74c3c" stroke="#b53c2e" stroke-width="1.5"/><rect x="${x-1.5}" y="${y-10}" width="3" height="6" fill="#8e5a1d"/></g>`;
     }
     document.getElementById('fw-visual-day').innerHTML = `
-      <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
+      <div style="text-align:center;">
+        <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
+      </div>
       <div style="text-align:center;font-size:0.9em;color:#666;margin-top:8px;">That's about ${numApples} apples (0.33 lbs each)</div>
     `;
     
