@@ -1,78 +1,115 @@
-async function drawFoodWasteMap(year) {
-  // Load US states GeoJSON
-  const geoUrl = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
-  const us = await d3.json(geoUrl);
+// Global data cache to avoid redundant loading
+let globalWasteData = null;
+let globalTopoData = null;
 
-  // Load CSV and filter for 2023
-  const data = await d3.csv('data/wastebyyear.csv', d => {
-  // const data = await d3.csv('https://raw.githubusercontent.com/vdanielb/FoodWasteWatch/main/data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
+// Shared constants to avoid duplication
+const STATE_POPULATION_2023 = {
+  "Alabama": 5074296, "Alaska": 733406, "Arizona": 7359191, "Arkansas": 3045637, "California": 38918045,
+  "Colorado": 5912064, "Connecticut": 3605944, "Delaware": 1045631, "District of Columbia": 678972, "Florida": 22377446,
+  "Georgia": 11015963, "Hawaii": 1427539, "Idaho": 1942571, "Illinois": 12582032, "Indiana": 6842384,
+  "Iowa": 3205690, "Kansas": 2934582, "Kentucky": 4546607, "Louisiana": 4569031, "Maine": 1396966,
+  "Maryland": 6195295, "Massachusetts": 6981974, "Michigan": 10061863, "Minnesota": 5737914, "Mississippi": 2918320,
+  "Missouri": 6168187, "Montana": 1103349, "Nebraska": 1961504, "Nevada": 3235251, "New Hampshire": 1388992,
+  "New Jersey": 9261692, "New Mexico": 2115252, "New York": 19453561, "North Carolina": 10701022, "North Dakota": 779261,
+  "Ohio": 11780017, "Oklahoma": 4019800, "Oregon": 4237256, "Pennsylvania": 12801989, "Rhode Island": 1097379,
+  "South Carolina": 5321610, "South Dakota": 909824, "Tennessee": 7092654, "Texas": 30439188, "Utah": 3402027,
+  "Vermont": 647156, "Virginia": 8683619, "Washington": 7715946, "West Virginia": 1778070, "Wisconsin": 5893718,
+  "Wyoming": 586485
+};
+
+const STATE_ID_TO_NAME = new Map([
+  ["01", "Alabama"], ["02", "Alaska"], ["04", "Arizona"], ["05", "Arkansas"], ["06", "California"],
+  ["08", "Colorado"], ["09", "Connecticut"], ["10", "Delaware"], ["11", "District of Columbia"], ["12", "Florida"],
+  ["13", "Georgia"], ["15", "Hawaii"], ["16", "Idaho"], ["17", "Illinois"], ["18", "Indiana"],
+  ["19", "Iowa"], ["20", "Kansas"], ["21", "Kentucky"], ["22", "Louisiana"], ["23", "Maine"],
+  ["24", "Maryland"], ["25", "Massachusetts"], ["26", "Michigan"], ["27", "Minnesota"], ["28", "Mississippi"],
+  ["29", "Missouri"], ["30", "Montana"], ["31", "Nebraska"], ["32", "Nevada"], ["33", "New Hampshire"],
+  ["34", "New Jersey"], ["35", "New Mexico"], ["36", "New York"], ["37", "North Carolina"], ["38", "North Dakota"],
+  ["39", "Ohio"], ["40", "Oklahoma"], ["41", "Oregon"], ["42", "Pennsylvania"], ["44", "Rhode Island"],
+  ["45", "South Carolina"], ["46", "South Dakota"], ["47", "Tennessee"], ["48", "Texas"], ["49", "Utah"],
+  ["50", "Vermont"], ["51", "Virginia"], ["53", "Washington"], ["54", "West Virginia"], ["55", "Wisconsin"],
+  ["56", "Wyoming"]
+]);
+
+// Efficient data loading function
+async function loadGlobalData() {
+  if (!globalWasteData) {
+    globalWasteData = await d3.csv('data/wastebyyear.csv', d => {
+      d.year = +d.year;
+      d.tons_waste = +d.tons_waste;
+      return d;
+    });
+  }
+  if (!globalTopoData) {
+    const geoUrl = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+    globalTopoData = await d3.json(geoUrl);
+  }
+  return { wasteData: globalWasteData, topoData: globalTopoData };
+}
+
+// Global variable to track current view mode
+let currentViewMode = 'per10k';
+
+// Year slider event handler with performance improvements
+const yearSlider = document.getElementById('year-slider');
+const yearSliderValue = document.getElementById('year-slider-value');
+const viewModeSelect = document.getElementById('view-mode');
+
+if (yearSlider && yearSliderValue) {
+  let debounceTimer = null;
+  
+  yearSlider.addEventListener('input', function() {
+    const year = +this.value;
+    yearSliderValue.textContent = year;
+    
+    // Clear existing debounce timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    
+    // Increment operation ID to cancel previous operations
+    currentOperationId++;
+    const operationId = currentOperationId;
+    
+    // Debounce the actual drawing operations by 150ms
+    debounceTimer = setTimeout(() => {
+      // Check if this operation is still current
+      if (operationId === currentOperationId) {
+        // Redraw map and plots for selected year and state
+        drawFoodWasteMap(year, operationId);
+        drawFoodWasteBySubSectorBar({ year, state: selectedState || '', operationId });
+        drawFoodWasteByFoodTypeBar({ year, state: selectedState || '', operationId });
+      }
+    }, 150);
   });
-  const dataYear = data.filter(d => d.year === year);
+}
 
-  // 2023 US Census state population estimates (July 1, 2023)
-  const statePop2023 = {
-    "Alabama": 5074296,
-    "Alaska": 733406,
-    "Arizona": 7359191,
-    "Arkansas": 3045637,
-    "California": 38918045,
-    "Colorado": 5912064,
-    "Connecticut": 3605944,
-    "Delaware": 1045631,
-    "District of Columbia": 678972,
-    "Florida": 22377446,
-    "Georgia": 11015963,
-    "Hawaii": 1427539,
-    "Idaho": 1942571,
-    "Illinois": 12582032,
-    "Indiana": 6842384,
-    "Iowa": 3205690,
-    "Kansas": 2934582,
-    "Kentucky": 4546607,
-    "Louisiana": 4569031,
-    "Maine": 1396966,
-    "Maryland": 6195295,
-    "Massachusetts": 6981974,
-    "Michigan": 10061863,
-    "Minnesota": 5737914,
-    "Mississippi": 2918320,
-    "Missouri": 6168187,
-    "Montana": 1103349,
-    "Nebraska": 1961504,
-    "Nevada": 3235251,
-    "New Hampshire": 1388992,
-    "New Jersey": 9261692,
-    "New Mexico": 2115252,
-    "New York": 19453561,
-    "North Carolina": 10701022,
-    "North Dakota": 779261,
-    "Ohio": 11780017,
-    "Oklahoma": 4019800,
-    "Oregon": 4237256,
-    "Pennsylvania": 12801989,
-    "Rhode Island": 1097379,
-    "South Carolina": 5321610,
-    "South Dakota": 909824,
-    "Tennessee": 7092654,
-    "Texas": 30439188,
-    "Utah": 3402027,
-    "Vermont": 647156,
-    "Virginia": 8683619,
-    "Washington": 7715946,
-    "West Virginia": 1778070,
-    "Wisconsin": 5893718,
-    "Wyoming": 586485
-  };
+// Add view mode change handler
+if (viewModeSelect) {
+  viewModeSelect.addEventListener('change', function() {
+    currentViewMode = this.value;
+    const year = yearSlider ? +yearSlider.value : 2023;
+    currentOperationId++;
+    drawFoodWasteMap(year, currentOperationId);
+  });
+}
 
-  // Aggregate tons_waste by state (per 10,000 people)
+async function drawFoodWasteMap(year, operationId = null) {
+  const { wasteData, topoData } = await loadGlobalData();
+  
+  // Check if operation was cancelled
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  const dataYear = wasteData.filter(d => d.year === year);
+
+  // Aggregate tons_waste by state (per 10,000 people or total) using shared constant
   const wasteByState = d3.rollup(
     dataYear,
     v => {
       const state = v[0].state;
-      const pop = statePop2023[state];
+      const pop = STATE_POPULATION_2023[state];
       if (!pop) return null;
       const totalWaste = d3.sum(v, d => d.tons_waste);
       return {
@@ -83,35 +120,23 @@ async function drawFoodWasteMap(year) {
     d => d.state
   );
 
+  // Check if operation was cancelled before DOM updates
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+
   // Map state names to postal codes for GeoJSON
-  // us-atlas uses state FIPS codes, so we need a mapping
   const width = 960, height = 500;
   d3.select('#map').selectAll('*').remove();
   const svg = d3.select('#map').append('svg')
     .attr('width', width)
     .attr('height', height);
 
-  // use d3.geoPath and d3.geoAlbersUsa for projection
-  const projection = d3.geoAlbersUsa().fitSize([width, height], topojson.feature(us, us.objects.states));
+  const projection = d3.geoAlbersUsa().fitSize([width, height], topojson.feature(topoData, topoData.objects.states));
   const path = d3.geoPath().projection(projection);
 
-  // Get FIPS to state name mapping
-  const stateIdToName = new Map([
-    ["01", "Alabama"], ["02", "Alaska"], ["04", "Arizona"], ["05", "Arkansas"], ["06", "California"],
-    ["08", "Colorado"], ["09", "Connecticut"], ["10", "Delaware"], ["11", "District of Columbia"], ["12", "Florida"],
-    ["13", "Georgia"], ["15", "Hawaii"], ["16", "Idaho"], ["17", "Illinois"], ["18", "Indiana"],
-    ["19", "Iowa"], ["20", "Kansas"], ["21", "Kentucky"], ["22", "Louisiana"], ["23", "Maine"],
-    ["24", "Maryland"], ["25", "Massachusetts"], ["26", "Michigan"], ["27", "Minnesota"], ["28", "Mississippi"],
-    ["29", "Missouri"], ["30", "Montana"], ["31", "Nebraska"], ["32", "Nevada"], ["33", "New Hampshire"],
-    ["34", "New Jersey"], ["35", "New Mexico"], ["36", "New York"], ["37", "North Carolina"], ["38", "North Dakota"],
-    ["39", "Ohio"], ["40", "Oklahoma"], ["41", "Oregon"], ["42", "Pennsylvania"], ["44", "Rhode Island"],
-    ["45", "South Carolina"], ["46", "South Dakota"], ["47", "Tennessee"], ["48", "Texas"], ["49", "Utah"],
-    ["50", "Vermont"], ["51", "Virginia"], ["53", "Washington"], ["54", "West Virginia"], ["55", "Wisconsin"],
-    ["56", "Wyoming"]
-  ]);
-
-  // Compute color scale
-  const values = Array.from(wasteByState.values(), d => d.per10k);
+  // Compute color scale based on current view mode
+  const values = Array.from(wasteByState.values(), d => currentViewMode === 'per10k' ? d.per10k : d.totalWaste);
   const color = d3.scaleSequential()
     .domain([d3.min(values), d3.max(values)])
     .interpolator(d3.interpolateYlOrRd);
@@ -120,35 +145,46 @@ async function drawFoodWasteMap(year) {
   const g = svg.append('g');
   const states = g
     .selectAll('path')
-    .data(topojson.feature(us, us.objects.states).features)
+    .data(topojson.feature(topoData, topoData.objects.states).features)
     .join('path')
     .attr('d', path)
     .attr('fill', d => {
       const fips = d.id.toString().padStart(2, '0');
-      const stateName = stateIdToName.get(fips);
+      const stateName = STATE_ID_TO_NAME.get(fips);
       const waste = wasteByState.get(stateName);
-      return waste ? color(waste.per10k) : '#eee';
+      if (!waste) return '#eee';
+      return color(currentViewMode === 'per10k' ? waste.per10k : waste.totalWaste);
     })
     .attr('stroke', '#000')
     .attr('stroke-width', 0.8)
     .style('cursor', 'pointer')
     .on('mouseover', function(event, d) {
       const fips = d.id.toString().padStart(2, '0');
-      const stateName = stateIdToName.get(fips);
+      const stateName = STATE_ID_TO_NAME.get(fips);
       // Set opacity: only hovered and selected state are fully opaque
       states.transition().duration(200)
         .style('opacity', s => {
           const sFips = s.id.toString().padStart(2, '0');
-          const sName = stateIdToName.get(sFips);
+          const sName = STATE_ID_TO_NAME.get(sFips);
           return (s === d || sName === selectedState) ? 1 : 0.2;
         });
-
+      
+      const currentYear = yearSlider ? +yearSlider.value : year;
+      drawFoodWasteBySubSectorBar({ year: currentYear, state: stateName });
+      drawFoodWasteByFoodTypeBar({ year: currentYear, state: stateName });
+        
       // Tooltip
       const waste = wasteByState.get(stateName);
-      let html = `<strong>${stateName}</strong>
-        <br/><span class="red-number">${waste ? waste.per10k.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons</span> per 10,000 people
-        <br/><span class="red-number">${waste ? waste.totalWaste.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons</span> total
-        `;
+      let html = `<strong>${stateName}</strong>`;
+      if (waste) {
+        if (currentViewMode === 'per10k') {
+          html += `<br/><span class="red-number">${waste.per10k.toLocaleString(undefined, {maximumFractionDigits: 2})} tons</span> per 10,000 people`;
+        } else {
+          html += `<br/><span class="red-number">${waste.totalWaste.toLocaleString(undefined, {maximumFractionDigits: 2})} tons</span> total`;
+        }
+      } else {
+        html += '<br/>No data available';
+      }
       tooltip.style('display', 'block').html(html);
     })
     .on('mousemove', function(event) {
@@ -159,33 +195,25 @@ async function drawFoodWasteMap(year) {
       if (selectedState) {
         states.style('opacity', s => {
           const sFips = s.id.toString().padStart(2, '0');
-          const sName = stateIdToName.get(sFips);
+          const sName = STATE_ID_TO_NAME.get(sFips);
           return (sName === selectedState) ? 1 : 0.2;
         });
       } else {
+        const currentYear = yearSlider ? +yearSlider.value : year;
+        drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
+        drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
         states.transition().duration(200).style('opacity', 1);
       }
       tooltip.style('display', 'none');
-
-      // // Restore opacity: only selected state is highlighted
-      // states.transition().duration(200)
-      //   .style('opacity', s => {
-      //     const sFips = s.id.toString().padStart(2, '0');
-      //     const sName = stateIdToName.get(sFips);
-      //     return (selectedState && sName === selectedState) ? 1 : 1;
-      //   });
-      // // Redraw plots for selected state (or all US if none)
-      // drawFoodWasteBySubSectorBar({ year: 2023, state: selectedState || '' });
-      // drawFoodWasteByFoodTypeBar({ year: 2023, state: selectedState || '' });
-      // tooltip.style('display', 'none');
     })
     .on('click', function(event, d) {
       const fips = d.id.toString().padStart(2, '0');
-      const stateName = stateIdToName.get(fips);
+      const stateName = STATE_ID_TO_NAME.get(fips);
+      const currentYear = yearSlider ? +yearSlider.value : year;
       if (selectedState === stateName) {
         selectedState = null;
-        drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
-        drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
+        drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
+        drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
         states.transition().duration(200).style('opacity', 1);
       } else {
         selectedState = stateName;
@@ -193,50 +221,36 @@ async function drawFoodWasteMap(year) {
         states.transition().duration(200)
           .style('opacity', s => {
             const sFips = s.id.toString().padStart(2, '0');
-            const sName = stateIdToName.get(sFips);
+            const sName = STATE_ID_TO_NAME.get(sFips);
             return (sName === selectedState) ? 1 : 0.2;
             });
           // Draw plots for selected state
-          drawFoodWasteBySubSectorBar({ year: 2023, state: selectedState });
-          drawFoodWasteByFoodTypeBar({ year: 2023, state: selectedState });
+          drawFoodWasteBySubSectorBar({ year: currentYear, state: selectedState });
+          drawFoodWasteByFoodTypeBar({ year: currentYear, state: selectedState });
       }
     });
 
-    // ZOOMING FUNCTIONALITY
-    // .on('click', function(event, d) {
-    //   const fips = d.id.toString().padStart(2, '0');
-    //   const stateName = stateIdToName.get(fips);
-    //   drawFoodWasteBySubSectorBar({ year: 2023, state: stateName });
-    //   drawFoodWasteByFoodTypeBar({ year: 2023, state: stateName });
-    //   const isZoomed = d3.select(this).classed('zoomed');
-    //   if (isZoomed) {
-    //     g.transition().duration(750).attr('transform', null);
-    //     states.transition().duration(750).style('opacity', 1).classed('zoomed', false);
-    //   } else {
-    //     const [[x0, y0], [x1, y1]] = path.bounds(d);
-    //     const dx = x1 - x0;
-    //     const dy = y1 - y0;
-    //     const x = (x0 + x1) / 2;
-    //     const y = (y0 + y1) / 2;
-    //     const scale = Math.max(1, Math.min(8, 0.8 / Math.max(dx / width, dy / height)));
-    //     const translate = [width / 2 - scale * x, height / 2 - scale * y];
-    //     g.transition().duration(750)
-    //       .attr('transform', `translate(${translate[0]},${translate[1]}) scale(${scale})`);
-    //     states.transition().duration(750)
-    //       .style('opacity', s => (s === d ? 1 : 0.2))
-    //       .classed('zoomed', s => s === d);
-    //   }
-    // });
-
-  // Add reset view button functionality
+  if(selectedState) {
+    states.style('opacity', s => {
+      const sFips = s.id.toString().padStart(2, '0');
+      const sName = STATE_ID_TO_NAME.get(sFips);
+      return (sName === selectedState) ? 1 : 0.2;
+    });
+  }
+  else {
+    states.style('opacity', 1);
+  }
+  
   d3.select('#reset-map').on('click', function() {
     g.transition().duration(750).attr('transform', null);
     selectedState = null;
-    drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
-    drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
-    states.transition().duration(200).style('opacity', 1);
     yearSlider.value = 2023;
     yearSliderValue.textContent = 2023;
+    const currentYear = yearSlider ? +yearSlider.value : year;
+    drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
+    drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
+    states.transition().duration(200).style('opacity', 1);
+    // Note: Don't reset the year slider - keep the user's selected year
   });
 
   // Tooltip
@@ -282,6 +296,14 @@ async function drawFoodWasteMap(year) {
     .attr('font-size', 12)
     .attr('fill', '#444')
     .text('More');
+  // Add view mode label
+  legendSvg.append('text')
+    .attr('x', legendWidth / 2)
+    .attr('y', 6)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', 12)
+    .attr('fill', '#444')
+    .text(currentViewMode === 'per10k' ? 'Tons per 10,000 people' : 'Total tons');
 }
 
 function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preserveContent = false) {
@@ -569,34 +591,16 @@ document.addEventListener('DOMContentLoaded', function() {
   drawFoodWasteMap(2023);
 
   // --- Food waste scrollytelling calculations and visuals ---
-  d3.csv('data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
-  }).then(data => {
+  loadGlobalData().then(({ wasteData }) => {
     // Filter for 2023
-    const data2023 = data.filter(d => d.year === 2023);
-    // Get state populations from main.js
-    const statePop2023 = {
-      "Alabama": 5074296, "Alaska": 733406, "Arizona": 7359191, "Arkansas": 3045637, "California": 38918045,
-      "Colorado": 5912064, "Connecticut": 3605944, "Delaware": 1045631, "District of Columbia": 678972, "Florida": 22377446,
-      "Georgia": 11015963, "Hawaii": 1427539, "Idaho": 1942571, "Illinois": 12582032, "Indiana": 6842384,
-      "Iowa": 3205690, "Kansas": 2934582, "Kentucky": 4546607, "Louisiana": 4569031, "Maine": 1396966,
-      "Maryland": 6195295, "Massachusetts": 6981974, "Michigan": 10061863, "Minnesota": 5737914, "Mississippi": 2918320,
-      "Missouri": 6168187, "Montana": 1103349, "Nebraska": 1961504, "Nevada": 3235251, "New Hampshire": 1388992,
-      "New Jersey": 9261692, "New Mexico": 2115252, "New York": 19453561, "North Carolina": 10701022, "North Dakota": 779261,
-      "Ohio": 11780017, "Oklahoma": 4019800, "Oregon": 4237256, "Pennsylvania": 12801989, "Rhode Island": 1097379,
-      "South Carolina": 5321610, "South Dakota": 909824, "Tennessee": 7092654, "Texas": 30439188, "Utah": 3402027,
-      "Vermont": 647156, "Virginia": 8683619, "Washington": 7715946, "West Virginia": 1778070, "Wisconsin": 5893718,
-      "Wyoming": 586485
-    };
-    // Sum total waste and population
+    const data2023 = wasteData.filter(d => d.year === 2023);
+    // Sum total waste and population using shared constant
     let totalTons = 0;
     let totalPop = 0;
-    for (const state of Object.keys(statePop2023)) {
+    for (const state of Object.keys(STATE_POPULATION_2023)) {
       const stateWaste = data2023.filter(d => d.state === state);
       totalTons += d3.sum(stateWaste, d => d.tons_waste);
-      totalPop += statePop2023[state];
+      totalPop += STATE_POPULATION_2023[state];
     }
     const totalLbs = totalTons * 2000;
     const perPersonYear = totalLbs / totalPop;
@@ -669,9 +673,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize causes, effects, and solutions visualizations
   initCausesEffectsSolutionsVisualizations();
 
-  // Add this function to render the US-wide sub_sector bar chart
-  drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
-  drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
+  // Add this function to render the US-wide sub_sector bar chart with initial year
+  const initialYear = yearSlider ? +yearSlider.value : 2023;
+  drawFoodWasteBySubSectorBar({ year: initialYear, state: '' });
+  drawFoodWasteByFoodTypeBar({ year: initialYear, state: '' });
 });
 
 // Global variable to track current food visualization and prevent rapid switching
@@ -1454,184 +1459,199 @@ function initCausesEffectsSolutionsVisualizations() {
 // top k sub-sectors/food types
 const k = 5;
 
-function drawFoodWasteBySubSectorBar({ year = 2023, state = '' } = {}) {
-  d3.csv('data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
-  }).then(data => {
-    // Filter for year
-    let filtered = data.filter(d => d.year === +year);
-    // Filter for state if provided
-    if (state) filtered = filtered.filter(d => d.state === state);
-    // Group by sub_sector, using sector if Not Applicable
-    const grouped = d3.rollups(
-      filtered,
-      v => d3.sum(v, d => d.tons_waste),
-      d => d.sub_sector === 'Not Applicable' ? d.sector : d.sub_sector
-    );
-    grouped.sort((a, b) => b[1] - a[1]);
-    const top5 = grouped.slice(0, k);
-    // Set up SVG
-    const container = d3.select('#d3-plot-top');
-    container.selectAll('*').remove();
-    const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
-    const svg = container.append('svg')
-      .attr('width', width)
-      .attr('height', height);
-    // Y scale (categories)
-    const y = d3.scaleBand()
-      .domain(top5.map(d => d[0]))
-      .range([margin.top, height - margin.bottom])
-      .padding(0.15);
-    // X scale (millions of tons)
-    const x = d3.scaleLinear()
-      .domain([0, d3.max(top5, d => d[1] / 1e6)])
-      .nice()
-      .range([margin.left, width - margin.right]);
-    // Tooltip div (one global for this chart)
-    let tooltip = d3.select('#d3-plot-top-tooltip');
-    if (tooltip.empty()) {
-      tooltip = d3.select('body').append('div')
-        .attr('id', 'd3-plot-top-tooltip')
-        .attr('class', 'tooltip')
-        .style('padding', '10px')
-        .style('min-width', '0px')
-        .style('position', 'absolute')
-        .style('display', 'none');
-    }
-    // Bars
-    const bars = svg.append('g')
-      .selectAll('rect')
-      .data(top5)
-      .join('rect')
-      .attr('x', x(0))
-      .attr('y', d => y(d[0]))
-      .attr('width', 0)
-      .attr('height', y.bandwidth())
-      .attr('fill', '#e67e22')
-      .on('mousemove', function(event, d) {
-        tooltip
-          .style('display', 'block')
-          .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
-          .style('left', (event.pageX + 12) + 'px')
-          .style('top', (event.pageY - 24) + 'px');
-        d3.select(this).attr('fill', '#b35413');
-      })
-      .on('mouseleave', function() {
-        tooltip.style('display', 'none');
-        d3.select(this).attr('fill', '#e67e22');
-      });
+async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationId = null } = {}) {
+  const { wasteData } = await loadGlobalData();
+  
+  // Check if operation was cancelled after async operation
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Filter for year
+  let filtered = wasteData.filter(d => d.year === +year);
+  // Filter for state if provided
+  if (state) filtered = filtered.filter(d => d.state === state);
+  // Group by sub_sector, using sector if Not Applicable
+  const grouped = d3.rollups(
+    filtered,
+    v => d3.sum(v, d => d.tons_waste),
+    d => d.sub_sector === 'Not Applicable' ? d.sector : d.sub_sector
+  );
+  grouped.sort((a, b) => b[1] - a[1]);
+  const top5 = grouped.slice(0, k);
+  
+  // Check if operation was cancelled before DOM updates
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Set up SVG
+  const container = d3.select('#d3-plot-top');
+  container.selectAll('*').remove();
+  const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
+  const svg = container.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  // Y scale (categories)
+  const y = d3.scaleBand()
+    .domain(top5.map(d => d[0]))
+    .range([margin.top, height - margin.bottom])
+    .padding(0.15);
+  // X scale (millions of tons)
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(top5, d => d[1] / 1e6)])
+    .nice()
+    .range([margin.left, width - margin.right]);
+  // Tooltip div (one global for this chart)
+  let tooltip = d3.select('#d3-plot-top-tooltip');
+  if (tooltip.empty()) {
+    tooltip = d3.select('body').append('div')
+      .attr('id', 'd3-plot-top-tooltip')
+      .attr('class', 'tooltip')
+      .style('padding', '10px')
+      .style('min-width', '0px')
+      .style('position', 'absolute')
+      .style('display', 'none');
+  }
+  // Bars
+  const bars = svg.append('g')
+    .selectAll('rect')
+    .data(top5)
+    .join('rect')
+    .attr('x', x(0))
+    .attr('y', d => y(d[0]))
+    .attr('width', 0)
+    .attr('height', y.bandwidth())
+    .attr('fill', '#e67e22')
+    .on('mousemove', function(event, d) {
+      tooltip
+        .style('display', 'block')
+        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
+        .style('left', (event.pageX + 12) + 'px')
+        .style('top', (event.pageY - 24) + 'px');
+      d3.select(this).attr('fill', '#b35413');
+    })
+    .on('mouseleave', function() {
+      tooltip.style('display', 'none');
+      d3.select(this).attr('fill', '#e67e22');
+    });
 
-    bars.transition()
-      .duration(800)
-      .attr('width', d => x(d[1] / 1e6) - x(0));
+  bars.transition()
+    .duration(800)
+    .attr('width', d => x(d[1] / 1e6) - x(0));
 
-    // Y axis
-    svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
-      .selectAll('text')
-      .style('font-size', '13px');
-    // X axis (millions)
-    svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
-      .selectAll('text')
-      .style('font-size', '12px');
-    // X axis label
-    svg.append('text')
-      .attr('x', (width + margin.left) / 2)
-      .attr('y', height - 10)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '13px')
-      .text('Millions of Tons');
-    
-    svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margin.top - 15)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '15px')
-      .attr('font-weight', 600)
-      .text(`Top 5 Most Wasteful Sub-Sectors`);
-    svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margin.top - 3) // 20px below the previous line
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '13px')
-      .attr('font-weight', 400)
-      .text(selectedState ? `(${selectedState}, ${year})` : `(US, ${year})`);
-  });
+  // Y axis
+  svg.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y))
+    .selectAll('text')
+    .style('font-size', '13px');
+  // X axis (millions)
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
+    .selectAll('text')
+    .style('font-size', '12px');
+  // X axis label
+  svg.append('text')
+    .attr('x', (width + margin.left) / 2)
+    .attr('y', height - 10)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '13px')
+    .text('Millions of Tons');
+  
+  svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', margin.top - 15)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '15px')
+    .attr('font-weight', 600)
+    .text(`Top 5 Most Wasteful Sub-Sectors`);
+  svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', margin.top - 3) // 20px below the previous line
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '13px')
+    .attr('font-weight', 400)
+    .text(state ? `(${state}, ${year})` : `(US, ${year})`);
 }
 
-function drawFoodWasteByFoodTypeBar({ year = 2023, state = '' } = {}) {
-  d3.csv('data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
-  }).then(data => {
-    // Filter for year
-    let filtered = data.filter(d => d.year === +year);
-    // Filter for state if provided
-    if (state) filtered = filtered.filter(d => d.state === state);
-    // Group by food_type
-    const grouped = d3.rollups(
-      filtered,
-      v => d3.sum(v, d => d.tons_waste),
-      d => d.food_type
-    );
-    grouped.sort((a, b) => b[1] - a[1]);
-    const top5 = grouped.slice(0, k);
-    // Set up SVG
-    const container = d3.select('#d3-plot-bottom');
-    container.selectAll('*').remove();
-    const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
-    const svg = container.append('svg')
-      .attr('width', width)
-      .attr('height', height);
-    // Y scale (categories)
-    const y = d3.scaleBand()
-      .domain(top5.map(d => d[0]))
-      .range([margin.top, height - margin.bottom])
-      .padding(0.15);
-    // X scale (millions of tons)
-    const x = d3.scaleLinear()
-      .domain([0, d3.max(top5, d => d[1] / 1e6)])
-      .nice()
-      .range([margin.left, width - margin.right]);
-    // Tooltip div (one global for this chart)
-    let tooltip = d3.select('#d3-plot-bottom-tooltip');
-    if (tooltip.empty()) {
-      tooltip = d3.select('body').append('div')
-        .attr('id', 'd3-plot-bottom-tooltip')
-        .attr('class', 'tooltip')
-        .style('padding', '10px')
-        .style('min-width', '0px')
-        .style('position', 'absolute')
-        .style('display', 'none');
-    }
-    // Bars
-    const bars = svg.append('g')
-      .selectAll('rect')
-      .data(top5)
-      .join('rect')
-      .attr('x', x(0))
-      .attr('y', d => y(d[0]))
-      .attr('width', 0)
-      .attr('height', y.bandwidth())
-      .attr('fill', '#3498db')
-      .on('mousemove', function(event, d) {
-        tooltip
-          .style('display', 'block')
-          .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
-          .style('left', (event.pageX + 12) + 'px')
-          .style('top', (event.pageY - 24) + 'px');
-        d3.select(this).attr('fill', '#1d5e8a');
-      })
-      .on('mouseleave', function() {
-        tooltip.style('display', 'none');
-        d3.select(this).attr('fill', '#3498db');
-      });
+async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId = null } = {}) {
+  const { wasteData } = await loadGlobalData();
+  
+  // Check if operation was cancelled after async operation
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Filter for year
+  let filtered = wasteData.filter(d => d.year === +year);
+  // Filter for state if provided
+  if (state) filtered = filtered.filter(d => d.state === state);
+  // Group by food_type
+  const grouped = d3.rollups(
+    filtered,
+    v => d3.sum(v, d => d.tons_waste),
+    d => d.food_type
+  );
+  grouped.sort((a, b) => b[1] - a[1]);
+  const top5 = grouped.slice(0, k);
+  
+  // Check if operation was cancelled before DOM updates
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Set up SVG
+  const container = d3.select('#d3-plot-bottom');
+  container.selectAll('*').remove();
+  const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
+  const svg = container.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  // Y scale (categories)
+  const y = d3.scaleBand()
+    .domain(top5.map(d => d[0]))
+    .range([margin.top, height - margin.bottom])
+    .padding(0.15);
+  // X scale (millions of tons)
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(top5, d => d[1] / 1e6)])
+    .nice()
+    .range([margin.left, width - margin.right]);
+  // Tooltip div (one global for this chart)
+  let tooltip = d3.select('#d3-plot-bottom-tooltip');
+  if (tooltip.empty()) {
+    tooltip = d3.select('body').append('div')
+      .attr('id', 'd3-plot-bottom-tooltip')
+      .attr('class', 'tooltip')
+      .style('padding', '10px')
+      .style('min-width', '0px')
+      .style('position', 'absolute')
+      .style('display', 'none');
+  }
+  // Bars
+  const bars = svg.append('g')
+    .selectAll('rect')
+    .data(top5)
+    .join('rect')
+    .attr('x', x(0))
+    .attr('y', d => y(d[0]))
+    .attr('width', 0)
+    .attr('height', y.bandwidth())
+    .attr('fill', '#3498db')
+    .on('mousemove', function(event, d) {
+      tooltip
+        .style('display', 'block')
+        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
+        .style('left', (event.pageX + 12) + 'px')
+        .style('top', (event.pageY - 24) + 'px');
+      d3.select(this).attr('fill', '#1d5e8a');
+    })
+    .on('mouseleave', function() {
+      tooltip.style('display', 'none');
+      d3.select(this).attr('fill', '#3498db');
+    });
 
     bars.transition()
       .duration(800)
@@ -1664,14 +1684,13 @@ function drawFoodWasteByFoodTypeBar({ year = 2023, state = '' } = {}) {
       .attr('font-size', '15px')
       .attr('font-weight', 600)
       .text(`Top 5 Most Wasted Food Types`);
-    svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margin.top - 3) // 20px below the previous line
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '13px')
-      .attr('font-weight', 400)
-      .text(selectedState ? `(${selectedState}, ${year})` : `(US, ${year})`);
-  });
+      svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', margin.top - 3) // 20px below the previous line
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '13px')
+    .attr('font-weight', 400)
+    .text(state ? `(${state}, ${year})` : `(US, ${year})`);
 }
 
 // Improved scroll-triggered background color transition
@@ -1719,17 +1738,6 @@ window.addEventListener('scroll', function() {
   document.body.style.background = `rgb(${r},${g},${b})`;
 });
 
-// Year slider event handler
-const yearSlider = document.getElementById('year-slider');
-const yearSliderValue = document.getElementById('year-slider-value');
-if (yearSlider && yearSliderValue) {
-  yearSlider.addEventListener('input', function() {
-    const year = +this.value;
-    yearSliderValue.textContent = year;
-    // Redraw map and plots for selected year and state
-    drawFoodWasteMap(year);
-    drawFoodWasteBySubSectorBar({ year, state: selectedState || '' });
-    drawFoodWasteByFoodTypeBar({ year, state: selectedState || '' });
-  });
-}
+// Performance improvement: operation cancellation system
+let currentOperationId = 0;
 
