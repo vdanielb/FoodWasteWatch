@@ -785,12 +785,12 @@ h2 {
 
 /* Country Visualization Section */
 .country-headline-section {
-  min-height: 40vh; /* Even smaller on mobile */
+  min-height: 25vh; /* Reduced from 40vh */
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .country-visualization {
@@ -828,11 +828,7 @@ h2 {
 
 /* Specific styling for the two subtitle lines */
 #country-subtext-1 {
-  animation-delay: 1s;
-}
-
-#country-subtext-2 {
-  animation-delay: 2s;
+  animation-delay: 0.5s;
 }
 
 /* Red number styling */
@@ -849,12 +845,7 @@ h2 {
 
 .country-header.animate #country-subtext-1 {
   opacity: 1;
-  transition-delay: 1s;
-}
-
-.country-header.animate #country-subtext-2 {
-  opacity: 1;
-  transition-delay: 2s;
+  transition-delay: 0.5s;
 }
 
 .country-container {
@@ -987,6 +978,24 @@ h2 {
   .food-emoji {
     font-size: 28px; /* Slightly smaller for better fit on smaller screens */
   }
+  
+  .country-conclusion-section {
+    min-height: 25vh;
+    padding: 1.5rem 1.5rem;
+  }
+  
+  .country-conclusion {
+    max-width: 700px;
+    padding: 1.5rem;
+  }
+  
+  .country-conclusion h1 {
+    font-size: 3rem;
+  }
+  
+  .country-conclusion h2 {
+    font-size: 1.9rem;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1027,6 +1036,24 @@ h2 {
   
   .country-headline-section {
     min-height: 50vh; /* Reduce even more on mobile */
+  }
+  
+  .country-conclusion-section {
+    min-height: 45vh;
+    padding: 2.5rem 1rem;
+  }
+  
+  .country-conclusion {
+    max-width: 500px;
+    padding: 1.2rem;
+  }
+  
+  .country-conclusion h1 {
+    font-size: 2.5rem;
+  }
+  
+  .country-conclusion h2 {
+    font-size: 1.6rem;
   }
 }
 
@@ -1086,16 +1113,87 @@ h2 {
   .country-headline-section {
     min-height: 40vh; /* Even smaller on mobile */
   }
+  
+  .country-conclusion-section {
+    min-height: 15vh;
+    padding: 1rem 1rem;
+  }
+  
+  .country-conclusion {
+    max-width: 90%;
+    padding: 1rem;
+    border-radius: 15px;
+  }
+  
+  .country-conclusion h1 {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+  
+  .country-conclusion h2 {
+    font-size: 1.3rem;
+    line-height: 1.5;
+  }
+}
+
+/* Country Conclusion Section */
+.country-conclusion-section {
+  min-height: 30vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 2rem 2rem;
+  position: relative;
+}
+
+/* Country Conclusion Text */
+.country-conclusion {
+  text-align: center;
+  max-width: 900px;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 20;
+  border: 3px solid #e74c3c;
+}
+
+.country-conclusion.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.country-conclusion h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+  letter-spacing: 2px;
+}
+
+.country-conclusion h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #34495e;
+  margin: 0;
+  line-height: 1.4;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Transition Section */
 .transition-section {
-  min-height: 120vh; /* Increased height to accommodate sequential text */
+  min-height: 80vh; /* Reduced from 120vh */
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 4rem 2rem;
+  padding: 2rem 2rem; /* Reduced from 4rem */
   position: relative;
 }
 
@@ -1131,6 +1229,10 @@ h2 {
   transform: translateY(30px);
   transition: all 1s ease;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+#transition-text-2 {
+  margin-top: 2rem; /* Add extra space above the second line */
 }
 
 #transition-header.visible,
@@ -1175,8 +1277,8 @@ h2 {
 /* Responsive design for transition section */
 @media (max-width: 1200px) {
   .transition-section {
-    min-height: 100vh; /* Adjusted for smaller screens */
-    padding: 3rem 1.5rem;
+    min-height: 70vh; /* Reduced from 100vh */
+    padding: 2rem 1.5rem; /* Reduced from 3rem */
   }
   
   .transition-content {
@@ -1192,6 +1294,10 @@ h2 {
     font-size: 2.4rem;
   }
   
+  #transition-text-2 {
+    margin-top: 1.8rem; /* Maintain gap on tablet */
+  }
+  
   .transition-arrow svg {
     width: 70px;
     height: 70px;
@@ -1200,8 +1306,8 @@ h2 {
 
 @media (max-width: 900px) {
   .transition-section {
-    min-height: 90vh;
-    padding: 2.5rem 1rem;
+    min-height: 60vh; /* Reduced from 90vh */
+    padding: 1.5rem 1rem; /* Reduced from 2.5rem */
   }
   
   .transition-content {
@@ -1217,6 +1323,10 @@ h2 {
     font-size: 2rem;
   }
   
+  #transition-text-2 {
+    margin-top: 1.5rem; /* Maintain gap on mobile */
+  }
+  
   .transition-arrow svg {
     width: 60px;
     height: 60px;
@@ -1225,8 +1335,8 @@ h2 {
 
 @media (max-width: 700px) {
   .transition-section {
-    min-height: 80vh;
-    padding: 2rem 1rem;
+    min-height: 50vh; /* Reduced from 80vh */
+    padding: 1rem 1rem; /* Reduced from 2rem */
   }
   
   .transition-content {
@@ -1241,6 +1351,10 @@ h2 {
   #transition-text-2 {
     font-size: 1.6rem;
     line-height: 1.5;
+  }
+  
+  #transition-text-2 {
+    margin-top: 1.2rem; /* Maintain gap on small mobile */
   }
   
   .transition-arrow svg {
