@@ -154,9 +154,18 @@
   <!-- Map section -->
   <div class="map-container" style="
     background-color: #f5f7fa;
-    border-radius: 10px;
+    border-radius: 10px 10px 0 0;
     margin: 0;
   ">
+    <div style="width: 100%; display: flex;
+     flex-direction: column; align-items: center; margin-bottom: 1rem; margin-top: 2.5rem;
+     position: absolute;
+     top: 2rem;
+     ">
+      <label for="year-slider" id="year-slider-label" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Year: <span id="year-slider-value">2023</span></label>
+      <input type="range" min="2014" max="2023" value="2023" id="year-slider" style="width: 200px;">
+    </div>
+    <h1 style="position: absolute; top: 0; left: 0; right: 0; text-align: center; color: #333; margin: 2rem 0;">Food Waste by State</h1>
     
     <div id="map"></div>
     <button id="reset-map" class="reset-button">Reset Filters</button>
@@ -174,6 +183,9 @@
       <!-- D3 visualization will be rendered here -->
     </div>
   </div>
+
+  <div style="background-color: #f5f7fa;">
+
 
   <!-- Intro scrollytelling steps moved below the map -->
   <section class="scrollytelling">
@@ -370,8 +382,9 @@
     <br> Lastly, it will also be a challenge to improve the performance of our visualization to make it more seamless. <br></p>
     
     <h2>Data</h2>
-    <p>ReFED U.S. State Food Surplus Summary, 2010-2023.</p>
+    <p>ReFED U.S. State Food Surplus Summary, 2014-2023.</p>
   </section>
+</div>
 
 </body>
 </html>
