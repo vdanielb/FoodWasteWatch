@@ -555,6 +555,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize layered scrolling system
     initLayeredScrolling();
   });
+
+  // Initialize causes, effects, and solutions visualizations
+  initCausesEffectsSolutionsVisualizations();
 });
 
 // Global variable to track current food visualization and prevent rapid switching
@@ -928,5 +931,245 @@ function initSidebarMenu() {
     if (e.key === 'Escape' && sidebar.classList.contains('open')) {
       closeSidebar();
     }
+  });
+}
+
+// Data visualization functions for causes, effects, and solutions section
+function initCausesEffectsSolutionsVisualizations() {
+  // Causes visualization - Pie chart showing distribution of food waste causes
+  function createCausesChart() {
+    const container = document.getElementById('waste-causes-chart');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const radius = Math.min(width, height) / 2 - 40;
+
+    const data = [
+      { label: 'Consumer Level', value: 43 },
+      { label: 'Date Label Confusion', value: 20 },
+      { label: 'Large Portions', value: 15 },
+      { label: 'Other', value: 22 }
+    ];
+
+    const svg = d3.select(container)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .append('g')
+      .attr('transform', `translate(${width/2},${height/2})`);
+
+    const color = d3.scaleOrdinal()
+      .domain(data.map(d => d.label))
+      .range(['#e74c3c', '#3498db', '#2ecc71', '#f1c40f']);
+
+    const pie = d3.pie()
+      .value(d => d.value)
+      .sort(null);
+
+    const arc = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius);
+
+    const arcs = svg.selectAll('arc')
+      .data(pie(data))
+      .enter()
+      .append('g');
+
+    arcs.append('path')
+      .attr('d', arc)
+      .attr('fill', d => color(d.data.label))
+      .attr('stroke', 'white')
+      .style('stroke-width', '2px');
+
+    // Add labels
+    const labelArc = d3.arc()
+      .innerRadius(radius * 0.6)
+      .outerRadius(radius * 0.6);
+
+    arcs.append('text')
+      .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+      .attr('dy', '.35em')
+      .text(d => `${d.data.label} (${d.data.value}%)`)
+      .style('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', 'white');
+  }
+
+  // Effects visualization - Bar chart showing environmental impacts
+  function createEffectsChart() {
+    const container = document.getElementById('waste-effects-chart');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    const data = [
+      { impact: 'Greenhouse Gases', value: 8 },
+      { impact: 'Water Waste', value: 21 },
+      { impact: 'Land Use', value: 28 }
+    ];
+
+    const svg = d3.select(container)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
+
+    const x = d3.scaleBand()
+      .domain(data.map(d => d.impact))
+      .range([margin.left, width - margin.right])
+      .padding(0.1);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.value)])
+      .range([height - margin.bottom, margin.top]);
+
+    svg.append('g')
+      .attr('transform', `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end');
+
+    svg.append('g')
+      .attr('transform', `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(null, 's'));
+
+    svg.selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('x', d => x(d.impact))
+      .attr('y', d => y(d.value))
+      .attr('width', x.bandwidth())
+      .attr('height', d => height - margin.bottom - y(d.value))
+      .attr('fill', '#e74c3c');
+
+    // Add value labels
+    svg.selectAll('text.value')
+      .data(data)
+      .enter()
+      .append('text')
+      .attr('class', 'value')
+      .attr('x', d => x(d.impact) + x.bandwidth() / 2)
+      .attr('y', d => y(d.value) - 5)
+      .attr('text-anchor', 'middle')
+      .text(d => `${d.value}%`);
+  }
+
+  // Solutions visualization - Line chart showing impact of solutions over time
+  function createSolutionsChart() {
+    const container = document.getElementById('waste-solutions-chart');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    const data = [
+      { month: 0, reduction: 0 },
+      { month: 1, reduction: 10 },
+      { month: 2, reduction: 20 },
+      { month: 3, reduction: 30 }
+    ];
+
+    const svg = d3.select(container)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
+
+    const x = d3.scaleLinear()
+      .domain([0, 3])
+      .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleLinear()
+      .domain([0, 30])
+      .range([height - margin.bottom, margin.top]);
+
+    const line = d3.line()
+      .x(d => x(d.month))
+      .y(d => y(d.reduction));
+
+    svg.append('g')
+      .attr('transform', `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).ticks(4).tickFormat(d => `Month ${d}`));
+
+    svg.append('g')
+      .attr('transform', `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(null, 's'));
+
+    svg.append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#2ecc71')
+      .attr('stroke-width', 2)
+      .attr('d', line);
+
+    // Add dots
+    svg.selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('cx', d => x(d.month))
+      .attr('cy', d => y(d.reduction))
+      .attr('r', 4)
+      .attr('fill', '#2ecc71');
+  }
+
+  // Impact visualization - Stacked area chart showing cumulative impact
+  function createImpactChart() {
+    const container = document.getElementById('waste-impact-chart');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    const data = [
+      { month: 0, environmental: 0, economic: 0, social: 0 },
+      { month: 1, environmental: 10, economic: 5, social: 8 },
+      { month: 2, environmental: 20, economic: 15, social: 18 },
+      { month: 3, environmental: 30, economic: 25, social: 28 }
+    ];
+
+    const svg = d3.select(container)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
+
+    const x = d3.scaleLinear()
+      .domain([0, 3])
+      .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleLinear()
+      .domain([0, 100])
+      .range([height - margin.bottom, margin.top]);
+
+    const area = d3.area()
+      .x(d => x(d.month))
+      .y0(d => y(d.environmental))
+      .y1(d => y(d.environmental + d.economic + d.social));
+
+    svg.append('g')
+      .attr('transform', `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).ticks(4).tickFormat(d => `Month ${d}`));
+
+    svg.append('g')
+      .attr('transform', `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(null, 's'));
+
+    svg.append('path')
+      .datum(data)
+      .attr('fill', '#3498db')
+      .attr('opacity', 0.6)
+      .attr('d', area);
+  }
+
+  // Initialize all visualizations
+  createCausesChart();
+  createEffectsChart();
+  createSolutionsChart();
+  createImpactChart();
+
+  // Add window resize handler
+  window.addEventListener('resize', () => {
+    d3.selectAll('#waste-causes-chart svg, #waste-effects-chart svg, #waste-solutions-chart svg, #waste-impact-chart svg').remove();
+    createCausesChart();
+    createEffectsChart();
+    createSolutionsChart();
+    createImpactChart();
   });
 }
