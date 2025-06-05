@@ -305,12 +305,6 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
         }
       }
     });
-    
-    // Add static trash pile if transitioning to household and preserving content
-    if (preserveContent && scale > 1) {
-      console.log('Adding static trash pile for household section'); // Debug log
-      createStaticTrashPile(svg, width, height, scale, fixedGroundY);
-    }
   }
 
   // Trash-like colors for circles
@@ -326,28 +320,44 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
       existingCircles.filter((d, i) => i < 20).remove(); // Remove oldest 20 circles
     }
     
-    const x = width/2 + (Math.random()-0.5)*180*scale; // Scale spread
-    const r = (8 + Math.random()*12) * scale; // Scale circle size
-    const color = trashColors[Math.floor(Math.random()*trashColors.length)];
-    const g = svg.append('g').attr('class', 'falling-circle');
-    g.append('circle')
-      .attr('cx', 0)
-      .attr('cy', 0)
-      .attr('r', r)
-      .attr('fill', color)
-      .attr('opacity', 0.95);
-    g.attr('transform', `translate(${x},-30)`);
+    // Determine how many circles to drop based on frequency (more intense = more circles)
+    let numCircles = 1;
+    if (frequency <= 50) {
+      numCircles = 3; // Drop 3 circles for city section
+    } else if (frequency <= 75) {
+      numCircles = 2; // Drop 2 circles for very fast sections
+    }
     
-    // Land at fixed ground position with some randomness
-    const landingY = fixedGroundY - 20 - Math.random()*15; // Much closer to ground (was -60 with -25 random)
-    
-    g.transition()
-      .duration(scale > 1 ? 1200 : 1600 * (2 - scale*0.5)) // Faster for household (1200ms vs 1600ms)
-      .ease(d3.easeBounce)
-      .attr('transform', `translate(${x},${landingY})`)
-      .on('end', function() {
-        d3.select(this).style('opacity', 1);
-      });
+    // Drop multiple circles for more intensity
+    for (let i = 0; i < numCircles; i++) {
+      const x = width/2 + (Math.random()-0.5)*180*scale; // Scale spread
+      const r = (8 + Math.random()*12) * scale; // Scale circle size
+      const color = trashColors[Math.floor(Math.random()*trashColors.length)];
+      const g = svg.append('g').attr('class', 'falling-circle');
+      g.append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', r)
+        .attr('fill', color)
+        .attr('opacity', 0.95);
+      g.attr('transform', `translate(${x},-30)`);
+      
+      // Land at fixed ground position with some randomness
+      const landingY = fixedGroundY - 20 - Math.random()*15; // Much closer to ground (was -60 with -25 random)
+      
+      // Add slight delay between multiple drops for more natural effect
+      const delay = i * 50; // 50ms delay between each circle in a batch
+      
+      setTimeout(() => {
+        g.transition()
+          .duration(scale > 1 ? 1200 : 1600 * (2 - scale*0.5)) // Faster for household (1200ms vs 1600ms)
+          .ease(d3.easeBounce)
+          .attr('transform', `translate(${x},${landingY})`)
+          .on('end', function() {
+            d3.select(this).style('opacity', 1);
+          });
+      }, delay);
+    }
   }
 
   return setInterval(dropCircle, frequency);
@@ -366,8 +376,8 @@ function initLayeredScrolling() {
     
     textBoxes.forEach((box, index) => {
       // Each text box appears at different scroll progress points
-      const startProgress = index * 0.15; // Adjusted for 6 boxes: 0, 0.15, 0.3, 0.45, 0.6, 0.75
-      const endProgress = startProgress + 0.25; // Duration of visibility
+      const startProgress = index * 0.13; // Adjusted for 7 boxes: 0, 0.13, 0.26, 0.39, 0.52, 0.65, 0.78
+      const endProgress = startProgress + 0.22; // Duration of visibility
       
       if (progress >= startProgress && progress <= endProgress) {
         // Box is active and moving through the viewport
@@ -395,17 +405,23 @@ function initLayeredScrolling() {
             updateTrashSummary('year');
             updateTrashAnimation('year');
           } else if (index === 3) {
-            updateFoodVisualization('householdDay');
-            updateTrashSummary('householdDay');
-            updateTrashAnimation('householdDay');
-          } else if (index === 4) {
-            updateFoodVisualization('householdMonth');
-            updateTrashSummary('householdMonth');
-            updateTrashAnimation('householdMonth');
-          } else if (index === 5) {
             updateFoodVisualization('householdYear');
             updateTrashSummary('householdYear');
             updateTrashAnimation('householdYear');
+          } else if (index === 4) {
+            updateFoodVisualization('cityYear');
+            updateTrashSummary('cityYear');
+            updateTrashAnimation('cityYear');
+          } else if (index === 5) {
+            updateFoodVisualization('stateYear');
+            updateTrashSummary('stateYear');
+            updateTrashAnimation('stateYear');
+          } else if (index === 6) {
+            // Country section - transition away from food visualization
+            // The country section will have its own separate visualization
+            updateFoodVisualization('stateYear'); // Keep showing state for smooth transition
+            updateTrashSummary('countryYear');
+            updateTrashAnimation('stateYear');
           }
         }
         
@@ -423,18 +439,21 @@ function initLayeredScrolling() {
             updateFoodVisualization('year');
             updateTrashSummary('year');
             updateTrashAnimation('year');
-          } else if (index === 3 && currentFoodVisualization !== 'householdDay') {
-            updateFoodVisualization('householdDay');
-            updateTrashSummary('householdDay');
-            updateTrashAnimation('householdDay');
-          } else if (index === 4 && currentFoodVisualization !== 'householdMonth') {
-            updateFoodVisualization('householdMonth');
-            updateTrashSummary('householdMonth');
-            updateTrashAnimation('householdMonth');
-          } else if (index === 5 && currentFoodVisualization !== 'householdYear') {
+          } else if (index === 3 && currentFoodVisualization !== 'householdYear') {
             updateFoodVisualization('householdYear');
             updateTrashSummary('householdYear');
             updateTrashAnimation('householdYear');
+          } else if (index === 4 && currentFoodVisualization !== 'cityYear') {
+            updateFoodVisualization('cityYear');
+            updateTrashSummary('cityYear');
+            updateTrashAnimation('cityYear');
+          } else if (index === 5 && currentFoodVisualization !== 'stateYear') {
+            updateFoodVisualization('stateYear');
+            updateTrashSummary('stateYear');
+            updateTrashAnimation('stateYear');
+          } else if (index === 6) {
+            // Country section handling
+            updateTrashSummary('countryYear');
           }
         }
         
@@ -446,8 +465,7 @@ function initLayeredScrolling() {
         // Box has passed through - position above screen
         box.style.top = '-20vh';
         box.style.opacity = 0;
-        box.classList.remove('active');
-        box.classList.add('passing');
+        box.classList.remove('active', 'passing');
       } else {
         // Box hasn't arrived yet - position below screen
         box.style.top = '100vh';
@@ -521,6 +539,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const perHouseholdMonth = perPersonMonth * householdSize;
     const perHouseholdYear = perPersonYear * householdSize;
     
+    // Calculate city amounts (average city size is 100,000 people)
+    const citySize = 100000;
+    const perCityYear = perPersonYear * citySize;
+    
+    // Calculate state amounts (average state size is 6.5 million people)
+    const stateSize = 6500000;
+    const perStateYear = perPersonYear * stateSize;
+    
+    // Calculate country amounts (entire USA population ~333 million people)
+    const countrySize = 333000000;
+    const perCountryYear = perPersonYear * countrySize;
+    
     // Store values globally for content changes
     window.foodWasteData = {
       day: r(perPersonDay),
@@ -528,7 +558,10 @@ document.addEventListener('DOMContentLoaded', function() {
       year: r(perPersonYear),
       householdDay: r(perHouseholdDay),
       householdMonth: r(perHouseholdMonth),
-      householdYear: r(perHouseholdYear)
+      householdYear: r(perHouseholdYear),
+      cityYear: Math.round(perCityYear / 1000000), // Convert to millions
+      stateYear: Math.round(perStateYear / 1000000000), // Convert to billions
+      countryYear: Math.round(perCountryYear / 1000000000) // Convert to billions
     };
     
     // Populate the text boxes with calculated values
@@ -536,10 +569,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('month-number').textContent = window.foodWasteData.month;
     document.getElementById('year-number').textContent = window.foodWasteData.year;
     
-    // Populate household text boxes
-    document.getElementById('household-day-number').textContent = window.foodWasteData.householdDay;
-    document.getElementById('household-month-number').textContent = window.foodWasteData.householdMonth;
+    // Populate household text boxes - only year
     document.getElementById('household-year-number').textContent = window.foodWasteData.householdYear;
+    
+    // Populate city and state text boxes
+    document.getElementById('city-year-number').textContent = window.foodWasteData.cityYear;
+    document.getElementById('state-year-number').textContent = window.foodWasteData.stateYear;
+    
+    // Populate country text box
+    document.getElementById('country-year-number').textContent = window.foodWasteData.countryYear;
     
     // Initialize both visualizations with day data
     currentFoodVisualization = null; // Reset to ensure updates work
@@ -551,6 +589,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize layered scrolling system
     initLayeredScrolling();
+    
+    // Initialize country section
+    initCountrySection();
   });
 });
 
@@ -648,54 +689,6 @@ function updateFoodVisualization(period) {
         <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
         <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numMelons} watermelons (5 lbs each)</div>
       `;
-    } else if (period === 'householdDay') {
-      // Household Day: Pizza slices (0.25 lbs each)
-      const sliceWeight = 0.25;
-      const numSlices = Math.max(1, Math.round(window.foodWasteData.householdDay / sliceWeight));
-      let slicesSVG = '';
-      const slicesPerRow = 10;
-      const sliceRows = Math.ceil(numSlices / slicesPerRow);
-      const sliceGridWidth = slicesPerRow * 22;
-      const sliceSVGWidth = 450;
-      const sliceSVGHeight = 280;
-      const sliceXOffset = (sliceSVGWidth - sliceGridWidth) / 2 + 11;
-      const sliceYStart = 40;
-      
-      for (let i = 0; i < numSlices; i++) {
-        const x = sliceXOffset + (i % slicesPerRow) * 22;
-        const y = sliceYStart + Math.floor(i / slicesPerRow) * 30;
-        // Pizza slice shape using path
-        slicesSVG += `<g><path d="M ${x} ${y-10} L ${x+8} ${y+8} L ${x-8} ${y+8} Z" fill="#ff6b35" stroke="#cc4125" stroke-width="1.5"/><circle cx="${x-3}" cy="${y+2}" r="1.5" fill="#dc143c"/><circle cx="${x+2}" cy="${y-2}" r="1" fill="#ffd700"/></g>`;
-      }
-      
-      container.innerHTML = `
-        <svg width="${sliceSVGWidth}" height="${sliceSVGHeight}" style="display:block;margin:0 auto;">${slicesSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numSlices} pizza slices (0.25 lbs each)</div>
-      `;
-    } else if (period === 'householdMonth') {
-      // Household Month: Roasted chickens (3 lbs each)
-      const chickenWeight = 3;
-      const numChickens = Math.max(1, Math.round(window.foodWasteData.householdMonth / chickenWeight));
-      let chickensSVG = '';
-      const chickensPerCol = 5;
-      const chickensCols = Math.ceil(numChickens / chickensPerCol);
-      const chickenGridWidth = chickensCols * 45;
-      const chickenSVGWidth = 450;
-      const chickenSVGHeight = 280;
-      const chickenXOffset = (chickenSVGWidth - chickenGridWidth) / 2 + 22;
-      const chickenYStart = 40;
-      
-      for (let i = 0; i < numChickens; i++) {
-        const x = chickenXOffset + Math.floor(i / chickensPerCol) * 45;
-        const y = chickenYStart + (i % chickensPerCol) * 35;
-        // Simplified chicken shape
-        chickensSVG += `<g><ellipse cx="${x}" cy="${y}" rx="18" ry="12" fill="#deb887" stroke="#8b7355" stroke-width="2"/><ellipse cx="${x-8}" cy="${y-8}" rx="8" ry="6" fill="#deb887" stroke="#8b7355" stroke-width="2"/><circle cx="${x-12}" cy="${y-10}" r="2" fill="#000"/></g>`;
-      }
-      
-      container.innerHTML = `
-        <svg width="${chickenSVGWidth}" height="${chickenSVGHeight}" style="display:block;margin:0 auto;">${chickensSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numChickens} roasted chickens (3 lbs each)</div>
-      `;
     } else if (period === 'householdYear') {
       // Household Year: Grocery bags (15 lbs each)
       const bagWeight = 15;
@@ -719,6 +712,61 @@ function updateFoodVisualization(period) {
       container.innerHTML = `
         <svg width="${bagSVGWidth}" height="${bagSVGHeight}" style="display:block;margin:0 auto;">${bagsSVG}</svg>
         <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numBags} full grocery bags (15 lbs each)</div>
+      `;
+    } else if (period === 'cityYear') {
+      // City Year: Delivery trucks (2000 lbs each)
+      const truckWeight = 2000;
+      const numTrucks = Math.max(1, Math.round((window.foodWasteData.cityYear * 1000000) / truckWeight));
+      let trucksSVG = '';
+      const trucksPerCol = 8;
+      const trucksCols = Math.ceil(numTrucks / trucksPerCol);
+      const truckGridWidth = trucksCols * 35;
+      const truckSVGWidth = 580;
+      const truckSVGHeight = 450;
+      const truckXOffset = (truckSVGWidth - truckGridWidth) / 2 + 17;
+      const truckYStart = 50;
+      
+      for (let i = 0; i < numTrucks; i++) {
+        const x = truckXOffset + Math.floor(i / trucksPerCol) * 35;
+        const y = truckYStart + (i % trucksPerCol) * 35;
+        // Delivery truck shape
+        trucksSVG += `<g><rect x="${x-15}" y="${y-6}" width="30" height="12" rx="2" fill="#4a90e2" stroke="#2171b5" stroke-width="1.5"/><rect x="${x-12}" y="${y-10}" width="8" height="8" fill="#74a9f7" stroke="#2171b5" stroke-width="1"/><circle cx="${x-8}" cy="${y+8}" r="3" fill="#333"/><circle cx="${x+8}" cy="${y+8}" r="3" fill="#333"/></g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${truckSVGWidth}" height="${truckSVGHeight}" style="display:block;margin:0 auto;">${trucksSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numTrucks} delivery trucks full of food (2000 lbs each)</div>
+      `;
+    } else if (period === 'stateYear') {
+      // State Year: Cargo ships (10 million lbs each - representing massive industrial scale)
+      const shipWeight = 10000000; // 10 million lbs per cargo ship
+      const numShips = Math.max(1, Math.round((window.foodWasteData.stateYear * 1000000000) / shipWeight));
+      let shipsSVG = '';
+      const shipsPerCol = 10; // More per column since we have fewer ships
+      const shipsCols = Math.ceil(numShips / shipsPerCol);
+      const shipGridWidth = shipsCols * 35; // Spacing for ships
+      const shipSVGWidth = 580;
+      const shipSVGHeight = 450;
+      const shipXOffset = (shipSVGWidth - shipGridWidth) / 2 + 17;
+      const shipYStart = 50;
+      
+      for (let i = 0; i < numShips; i++) {
+        const x = shipXOffset + Math.floor(i / shipsPerCol) * 35;
+        const y = shipYStart + (i % shipsPerCol) * 35;
+        // Cargo ship shape - hull, superstructure, containers
+        shipsSVG += `<g>
+          <ellipse cx="${x}" cy="${y+5}" rx="16" ry="4" fill="#2c3e50" stroke="#1a252f" stroke-width="1"/>
+          <rect x="${x-14}" y="${y-2}" width="28" height="7" rx="2" fill="#34495e" stroke="#2c3e50" stroke-width="1"/>
+          <rect x="${x-10}" y="${y-8}" width="6" height="6" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
+          <rect x="${x-3}" y="${y-8}" width="6" height="6" fill="#3498db" stroke="#2980b9" stroke-width="0.5"/>
+          <rect x="${x+4}" y="${y-8}" width="6" height="6" fill="#f39c12" stroke="#e67e22" stroke-width="0.5"/>
+          <rect x="${x+8}" y="${y-5}" width="4" height="8" fill="#95a5a6" stroke="#7f8c8d" stroke-width="0.5"/>
+        </g>`;
+      }
+      
+      container.innerHTML = `
+        <svg width="${shipSVGWidth}" height="${shipSVGHeight}" style="display:block;margin:0 auto;">${shipsSVG}</svg>
+        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numShips} cargo ships full of food (10 million lbs each)</div>
       `;
     }
     
@@ -765,14 +813,17 @@ function updateTrashSummary(period) {
       case 'year':
         summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.year}</span> lbs of food wasted per year`;
         break;
-      case 'householdDay':
-        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdDay}</span> lbs of food wasted per household per day`;
-        break;
-      case 'householdMonth':
-        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdMonth}</span> lbs of food wasted per household per month`;
-        break;
       case 'householdYear':
         summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.householdYear}</span> lbs of food wasted per household per year`;
+        break;
+      case 'cityYear':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.cityYear}</span> million lbs of food wasted per city per year`;
+        break;
+      case 'stateYear':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.stateYear}</span> billion lbs of food wasted per state per year`;
+        break;
+      case 'countryYear':
+        summaryElement.innerHTML = `<span class="amount">${window.foodWasteData.countryYear}</span> billion lbs of food wasted nationally per year`;
         break;
     }
     
@@ -787,7 +838,14 @@ function updateTrashSummary(period) {
 // Function to update the trash animation scale based on section
 function updateTrashAnimation(period) {
   // Determine which section we're in
-  const newSection = period.includes('household') ? 'household' : 'person';
+  let newSection = 'person'; // default
+  if (period.includes('household')) {
+    newSection = 'household';
+  } else if (period.includes('city')) {
+    newSection = 'city';
+  } else if (period.includes('state')) {
+    newSection = 'state';
+  }
   
   // Only update if we're actually switching sections OR if no animation exists yet
   if (newSection !== currentSection || !currentTrashAnimation) {
@@ -807,6 +865,16 @@ function updateTrashAnimation(period) {
       frequency = 150; // Much faster drops (was 250ms, now 150ms)
       preserveContent = (currentSection === 'person'); // Preserve if transitioning from person
       console.log(`Household section - preserveContent: ${preserveContent}`); // Debug log
+    } else if (newSection === 'city') {
+      scale = 1.3; // Keep same scale as household to avoid cutting
+      frequency = 50; // Much faster drops for more intensity
+      preserveContent = (currentSection === 'person' || currentSection === 'household'); // Preserve from previous sections
+      console.log(`City section - preserveContent: ${preserveContent}`); // Debug log
+    } else if (newSection === 'state') {
+      scale = 1.3; // Keep same scale as city to avoid cutting
+      frequency = 40; // Extremely fast drops
+      preserveContent = (currentSection === 'person' || currentSection === 'household' || currentSection === 'city'); // Preserve from previous sections
+      console.log(`State section - preserveContent: ${preserveContent}`); // Debug log
     } else {
       scale = 1; // Normal size for person
       frequency = 400; // Normal frequency
@@ -821,29 +889,153 @@ function updateTrashAnimation(period) {
   // If we're in the same section, do nothing - let the animation continue
 }
 
-// Function to create a static trash pile for household section
-function createStaticTrashPile(svg, width, height, scale, fixedGroundY) {
-  const trashColors = [
-    '#b5a27a', '#e0e0e0', '#7fd3e6', '#a3c586', '#f5e6c8', '#b0b0b0',
-    '#fffbe6', '#ffe066', '#e74c3c', '#6a7b8c', '#e2b07a', '#e0f7fa'
-  ];
+// Country section food emoji filling functionality
+function initCountrySection() {
+  const countryHeadlineSection = document.getElementById('country-headline-section');
+  const countrySection = document.getElementById('country-section');
+  const countryVisual = document.getElementById('country-visual');
+  const scaleLabels = document.getElementById('scale-labels');
+  const headline = document.getElementById('country-headline');
+  const subtext1 = document.getElementById('country-subtext-1');
+  const subtext2 = document.getElementById('country-subtext-2');
+  const countryHeader = document.querySelector('.country-header');
   
-  // Create 25-35 static circles at the base to simulate accumulated trash (increased from 15-20)
-  const numStaticCircles = 25 + Math.floor(Math.random() * 11); // 25-35 circles
+  // Food emojis to use
+  const foodEmojis = ['🍎', '🍌', '🍞', '🥕', '🍅', '🥔', '🥬', '🍇', '🍊', '🥒', '🌽', '🥖', '🧄', '🫐', '🍑', '🥝', '🍐', '🥯', '🥨', '🧅'];
   
-  for (let i = 0; i < numStaticCircles; i++) {
-    const x = width/2 + (Math.random()-0.5)*140*scale; // Spread around center
-    const y = fixedGroundY - 5 - Math.random()*25; // Closer to ground (was -10)
-    const r = (6 + Math.random()*8) * scale; // Varied sizes
-    const color = trashColors[Math.floor(Math.random()*trashColors.length)];
-    
-    const g = svg.append('g').attr('class', 'falling-circle static-trash');
-    g.append('circle')
-      .attr('cx', 0)
-      .attr('cy', 0)
-      .attr('r', r)
-      .attr('fill', color)
-      .attr('opacity', 0.9); // Slightly less opaque for static trash
-    g.attr('transform', `translate(${x},${y})`);
+  // Create scale labels
+  const maxValue = window.foodWasteData.countryYear;
+  for (let i = 0; i <= 10; i++) {
+    const value = Math.round((maxValue * i) / 10);
+    const tick = document.createElement('div');
+    tick.className = 'scale-tick';
+    tick.textContent = `${value}B lbs`;
+    scaleLabels.appendChild(tick);
   }
+  
+  // Generate grid of food emojis
+  const rows = 50; // Reduced from 120 to 50 for better spacing and less density
+  const cols = 35; // Reduced from 60 to 35 to leave more space for markers
+  const totalEmojis = rows * cols;
+  
+  for (let i = 0; i < totalEmojis; i++) {
+    const emoji = document.createElement('div');
+    emoji.className = 'food-emoji';
+    emoji.textContent = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
+    
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    
+    emoji.style.left = `${(col / (cols - 1)) * 85}%`; // Reduced from 96% to 85% to leave more space for markers
+    emoji.style.top = `${(row / (rows - 1)) * 95}%`; // Reduced slightly for better vertical spacing
+    
+    countryVisual.appendChild(emoji);
+  }
+  
+  // Scroll-based filling animation
+  function updateCountryVisualization() {
+    const headlineRect = countryHeadlineSection.getBoundingClientRect();
+    const visualRect = countrySection.getBoundingClientRect();
+    const transitionRect = document.getElementById('transition-section').getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Handle headline section
+    if (headlineRect.top <= viewportHeight && headlineRect.bottom >= 0) {
+      const headlineProgress = Math.max(0, Math.min(1, (viewportHeight - headlineRect.top) / viewportHeight));
+      
+      // Sequential animation: headline first, then each subtext with delays
+      if (headlineProgress > 0.2) {
+        countryHeader.classList.add('animate');
+      } else {
+        countryHeader.classList.remove('animate');
+      }
+    }
+    
+    // Handle visualization section
+    if (visualRect.top <= viewportHeight && visualRect.bottom >= 0) {
+      const visualProgress = Math.max(0, Math.min(1, (viewportHeight - visualRect.top) / (viewportHeight + visualRect.height)));
+      
+      // Fill emojis from top to bottom
+      const emojis = countryVisual.querySelectorAll('.food-emoji');
+      const fillProgress = Math.max(0, Math.min(1, visualProgress / 0.8)); // Fill throughout the visualization scroll
+      
+      // Calculate how many rows to fill based on progress
+      const rowsToFill = Math.floor(fillProgress * rows);
+      const partialRowProgress = (fillProgress * rows) - rowsToFill;
+      
+      emojis.forEach((emoji, index) => {
+        const row = Math.floor(index / cols);
+        const col = index % cols;
+        
+        let shouldShow = false;
+        
+        if (row < rowsToFill) {
+          // Show complete rows
+          shouldShow = true;
+        } else if (row === rowsToFill) {
+          // Show partial row based on progress
+          const colsToShow = Math.floor(partialRowProgress * cols);
+          shouldShow = col < colsToShow;
+        }
+        
+        if (shouldShow) {
+          if (!emoji.classList.contains('visible')) {
+            emoji.classList.add('visible', 'animate');
+            setTimeout(() => emoji.classList.remove('animate'), 600);
+          }
+        } else {
+          emoji.classList.remove('visible', 'animate');
+        }
+      });
+    }
+    
+    // Handle transition section fade-in
+    if (transitionRect.top <= viewportHeight && transitionRect.bottom >= 0) {
+      const transitionProgress = Math.max(0, Math.min(1, (viewportHeight - transitionRect.top) / (viewportHeight + transitionRect.height)));
+      const transitionHeader = document.getElementById('transition-header');
+      const transitionText1 = document.getElementById('transition-text-1');
+      const transitionText2 = document.getElementById('transition-text-2');
+      const transitionArrowSection = document.getElementById('transition-arrow-section');
+      
+      // Header appears when 15% through the section
+      if (transitionProgress > 0.15) {
+        transitionHeader.classList.add('visible');
+      } else {
+        transitionHeader.classList.remove('visible');
+      }
+      
+      // First text appears when 35% through the section
+      if (transitionProgress > 0.35) {
+        transitionText1.classList.add('visible');
+      } else {
+        transitionText1.classList.remove('visible');
+      }
+      
+      // Second text and arrow appear together when 60% through the section
+      if (transitionProgress > 0.6) {
+        transitionText2.classList.add('visible');
+        transitionArrowSection.classList.add('visible');
+      } else {
+        transitionText2.classList.remove('visible');
+        transitionArrowSection.classList.remove('visible');
+      }
+    }
+  }
+  
+  // Throttled scroll listener
+  let ticking = false;
+  function handleCountryScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateCountryVisualization();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  
+  window.addEventListener('scroll', handleCountryScroll);
+  
+  // Initial update
+  updateCountryVisualization();
 }

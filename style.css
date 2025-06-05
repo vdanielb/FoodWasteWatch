@@ -1,7 +1,10 @@
 @import url('https://fonts.cdnfonts.com/css/chomsky');
 
 body { 
-  font-family: Georgia, 'Times New Roman', Times, serif; margin: 0 auto; max-width: 960px; 
+  font-family: Georgia, 'Times New Roman', Times, serif; 
+  margin: 0; /* Remove auto margins for full-screen effect */
+  max-width: none; /* Remove max-width constraint for full-screen */
+  width: 100%;
 }
 
 .newspaper-header {
@@ -184,7 +187,7 @@ h2 {
 
 #scrolly-foodwaste {
   position: relative;
-  min-height: 800vh; /* Extended height for more scrolling space to accommodate 6 text boxes */
+  min-height: 1050vh; /* Increased from 900vh to accommodate 7 text boxes */
   max-width: 100vw; /* Use full viewport width */
   margin: 0; /* Remove margins */
   padding: 0; /* Remove padding */
@@ -205,7 +208,7 @@ h2 {
   width: 100vw; /* Full viewport width */
   max-width: none; /* Remove max-width constraint */
   margin: 0;
-  padding: 0 2px; /* Minimal padding to allow maximum left space */
+  padding: 0 2px 0 40px; /* Added left padding to shift everything right */
   pointer-events: none; /* Allow text boxes to pass through */
   box-sizing: border-box;
 }
@@ -215,10 +218,11 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center; /* Center both elements */
-  gap: 10px; /* Reduced from 20px to bring text closer to animation */
+  gap: 25px; /* Increased from 10px to push text lower and align with right side descriptions */
   pointer-events: auto;
-  margin-left: -80px; /* Push much further left */
+  margin-left: -20px; /* Reduced from -80px to better center the content */
   width: 100%;
+  position: relative; /* Add positioning context */
 }
 
 /* Fixed trash animation on the left */
@@ -249,6 +253,8 @@ h2 {
   min-width: 200px;
   width: fit-content; /* Allow text to determine width */
   margin: 0 auto; /* Center within the container */
+  position: relative;
+  top: 20px; /* Push text down to better align with right side descriptions */
 }
 
 .trash-summary .amount {
@@ -271,7 +277,7 @@ h2 {
   transition: all 0.3s ease, opacity 0.2s ease, transform 0.2s ease; /* Added smooth transitions */
   padding: 20px; /* Reduced padding to make more room for content */
   pointer-events: auto; /* Re-enable for this element */
-  margin-left: auto; /* Push to far right */
+  margin-left: 40px; /* Added margin to push further right */
 }
 
 /* Moving text boxes - now free to move across entire viewport */
@@ -334,6 +340,22 @@ h2 {
   transition: all 0.3s ease;
 }
 
+/* City and State text highlighting */
+.fw-city-year, .fw-state-year {
+  color: #e74c3c;
+  font-weight: 900;
+  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Country text highlighting */
+.fw-country-year {
+  color: #e74c3c;
+  font-weight: 900;
+  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  transition: all 0.3s ease;
+}
+
 /* Animation classes for content changes */
 .content-changing .food-visualization-area {
   transform: scale(1.03);
@@ -355,12 +377,13 @@ h2 {
   .fixed-layout {
     grid-template-columns: 450px 1fr 520px; /* Adjusted for larger food area */
     gap: 60px;
-    padding: 0 2px;
+    padding: 0 2px 0 30px; /* Adjusted left padding for smaller screens */
     height: 480px; /* Adjusted for responsive */
   }
   
   .trash-container {
-    margin-left: -60px; /* Much further left for smaller screens */
+    margin-left: -15px; /* Reduced from -60px for better centering */
+    gap: 20px; /* Adjusted gap for smaller screens */
   }
   
   .fixed-trash-animation {
@@ -372,11 +395,13 @@ h2 {
     width: 480px; /* Adjusted for responsive */
     height: 420px; /* Adjusted for responsive */
     padding: 18px;
+    margin-left: 30px; /* Adjusted margin for smaller screens */
   }
   
   .trash-summary {
     font-size: 1.2em;
     padding: 12px 20px;
+    top: 15px; /* Adjusted for smaller screens */
   }
   
   .moving-text-box {
@@ -393,12 +418,13 @@ h2 {
   .fixed-layout {
     grid-template-columns: 400px 1fr 420px; /* Adjusted for larger food area */
     gap: 40px;
-    padding: 0 1px;
+    padding: 0 1px 0 20px; /* Adjusted left padding for smaller screens */
     height: 420px; /* Adjusted for responsive */
   }
   
   .trash-container {
-    margin-left: -50px; /* Much further left for smaller screens */
+    margin-left: -10px; /* Reduced from -50px for better centering */
+    gap: 15px; /* Adjusted gap for smaller screens */
   }
   
   .fixed-trash-animation {
@@ -410,11 +436,13 @@ h2 {
     width: 380px; /* Adjusted for responsive */
     height: 380px; /* Adjusted for responsive */
     padding: 15px;
+    margin-left: 20px; /* Adjusted margin for smaller screens */
   }
   
   .trash-summary {
     font-size: 1.1em;
     padding: 10px 18px;
+    top: 10px; /* Adjusted for smaller screens */
   }
   
   .moving-text-box {
@@ -441,11 +469,12 @@ h2 {
     order: 1;
     margin-left: 0; /* Reset on mobile */
     align-items: center; /* Ensure centering on mobile */
-    gap: 8px; /* Slightly smaller gap on mobile */
+    gap: 12px; /* Adjusted gap for mobile */
   }
   
   .food-visualization-area {
     order: 2;
+    margin-left: 0; /* Reset margin on mobile */
   }
   
   .fixed-trash-animation,
@@ -453,12 +482,12 @@ h2 {
     width: 100%;
     max-width: 400px;
     justify-self: center;
-    margin-left: 0; /* Reset margin on mobile */
   }
   
   .trash-summary {
     font-size: 1.0em;
     padding: 8px 15px;
+    top: 5px; /* Minimal adjustment for mobile */
   }
   
   .moving-text-box {
@@ -490,5 +519,471 @@ h2 {
   
   .moving-text-box h2 {
     font-size: 1.2em; /* Reduced */
+  }
+}
+
+/* Country Visualization Section */
+.country-headline-section {
+  min-height: 40vh; /* Even smaller on mobile */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 2rem;
+}
+
+.country-visualization {
+  min-height: 250vh; /* Reduced from 300vh since we have fewer emojis now */
+  position: relative;
+  background: transparent; /* Remove background to blend with webpage */
+  padding: 0; /* Removed padding to use full screen */
+  overflow: hidden;
+}
+
+.country-header {
+  text-align: center;
+  z-index: 10;
+  max-width: 800px;
+}
+
+.country-header h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.country-header h2 {
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: #34495e;
+  margin: 1rem 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+/* Specific styling for the two subtitle lines */
+#country-subtext-1 {
+  animation-delay: 1s;
+}
+
+#country-subtext-2 {
+  animation-delay: 2s;
+}
+
+/* Red number styling */
+.red-number {
+  color: #e74c3c;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+}
+
+/* Animation classes */
+.country-header.animate h1 {
+  opacity: 1;
+}
+
+.country-header.animate #country-subtext-1 {
+  opacity: 1;
+  transition-delay: 1s;
+}
+
+.country-header.animate #country-subtext-2 {
+  opacity: 1;
+  transition-delay: 2s;
+}
+
+.country-container {
+  position: relative;
+  width: 100vw; /* Full viewport width */
+  height: 250vh; /* Reduced from 300vh to match the section height */
+  margin: 0;
+  display: flex;
+  align-items: flex-start; /* Align to top since we're much taller now */
+  justify-content: center;
+}
+
+.country-visual {
+  position: relative;
+  width: 100%; /* Use full width */
+  height: 100%; /* Use full height */
+  background: transparent; /* Remove background */
+  border: none; /* Remove border */
+  border-radius: 0; /* Remove border radius */
+  overflow: hidden;
+  box-shadow: none; /* Remove shadow */
+}
+
+.country-scale {
+  position: absolute;
+  right: 20px; /* Increased from 10px to give more space from emojis */
+  top: 10px; /* Add top margin */
+  height: calc(100% - 20px); /* Account for top/bottom margins */
+  width: 80px; /* Increased from 60px for better visibility */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.scale-labels {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.8rem; /* Slightly smaller for better fit */
+  color: #666;
+  font-weight: 600;
+}
+
+.scale-tick {
+  position: relative;
+  padding-left: 20px;
+  font-weight: 500;
+}
+
+.scale-tick::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 2px;
+  background: #3498db;
+}
+
+/* Food emoji styling */
+.food-emoji {
+  position: absolute;
+  font-size: 32px; /* Increased from 28px for better visibility with more spacing */
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.food-emoji.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.food-emoji.animate {
+  animation: foodDrop 0.6s ease-out;
+}
+
+@keyframes foodDrop {
+  0% {
+    transform: translateY(-20px) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(5px) scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive design for country section */
+@media (max-width: 1200px) {
+  .country-visual {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .country-container {
+    height: 250vh; /* Maintain reduced height */
+  }
+  
+  .country-scale {
+    height: calc(100% - 20px);
+    right: 15px; /* Adjusted for better spacing */
+    width: 70px; /* Adjusted for smaller screens */
+  }
+  
+  .scale-labels {
+    font-size: 0.7rem;
+  }
+  
+  .country-header h1 {
+    font-size: 3.5rem;
+  }
+  
+  .country-header h2 {
+    font-size: 2rem;
+  }
+  
+  .red-number {
+    font-size: 1em; /* Maintain relative size */
+  }
+  
+  .food-emoji {
+    font-size: 28px; /* Slightly smaller for better fit on smaller screens */
+  }
+}
+
+@media (max-width: 900px) {
+  .country-visual {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .country-container {
+    height: 250vh; /* Maintain reduced height */
+  }
+  
+  .country-scale {
+    height: calc(100% - 20px);
+    right: 10px;
+    width: 60px; /* Adjusted for mobile */
+  }
+  
+  .scale-labels {
+    font-size: 0.7rem;
+  }
+  
+  .country-header h1 {
+    font-size: 3rem;
+  }
+  
+  .country-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .red-number {
+    font-size: 1em; /* Maintain relative size */
+  }
+  
+  .food-emoji {
+    font-size: 24px; /* Smaller for mobile to fit more */
+  }
+  
+  .country-headline-section {
+    min-height: 50vh; /* Reduce even more on mobile */
+  }
+}
+
+@media (max-width: 700px) {
+  .country-container {
+    flex-direction: column;
+    height: 250vh; /* Maintain reduced height */
+    width: 100vw; /* Keep full width */
+  }
+  
+  .country-visual {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .country-scale {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    height: 30px;
+    width: 90%;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+  
+  .scale-labels {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    font-size: 0.6rem;
+  }
+  
+  .scale-tick::before {
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 10px;
+  }
+  
+  .country-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .country-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .red-number {
+    font-size: 1em; /* Maintain relative size */
+  }
+  
+  .food-emoji {
+    font-size: 20px; /* Smaller size for mobile with better spacing */
+  }
+  
+  .country-headline-section {
+    min-height: 40vh; /* Even smaller on mobile */
+  }
+}
+
+/* Transition Section */
+.transition-section {
+  min-height: 120vh; /* Increased height to accommodate sequential text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 4rem 2rem;
+  position: relative;
+}
+
+.transition-content {
+  max-width: 900px;
+  text-align: center;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem; /* Reduced from 2rem for tighter spacing */
+}
+
+#transition-header {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1s ease;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+}
+
+#transition-text-1,
+#transition-text-2 {
+  font-size: 2.8rem;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.4;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1s ease;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+#transition-header.visible,
+#transition-text-1.visible,
+#transition-text-2.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.transition-arrow-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.5rem; /* Reduce space from last text line */
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s ease;
+}
+
+.transition-arrow-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.transition-arrow {
+  color: #666;
+  animation: bounceArrow 2s infinite;
+}
+
+@keyframes bounceArrow {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(15px); /* Increased bounce distance for larger arrow */
+  }
+  60% {
+    transform: translateY(8px);
+  }
+}
+
+/* Responsive design for transition section */
+@media (max-width: 1200px) {
+  .transition-section {
+    min-height: 100vh; /* Adjusted for smaller screens */
+    padding: 3rem 1.5rem;
+  }
+  
+  .transition-content {
+    gap: 1.3rem; /* Reduced for smaller screens */
+  }
+  
+  #transition-header {
+    font-size: 3.5rem;
+  }
+  
+  #transition-text-1,
+  #transition-text-2 {
+    font-size: 2.4rem;
+  }
+  
+  .transition-arrow svg {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 900px) {
+  .transition-section {
+    min-height: 90vh;
+    padding: 2.5rem 1rem;
+  }
+  
+  .transition-content {
+    gap: 1.2rem;
+  }
+  
+  #transition-header {
+    font-size: 3rem;
+  }
+  
+  #transition-text-1,
+  #transition-text-2 {
+    font-size: 2rem;
+  }
+  
+  .transition-arrow svg {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 700px) {
+  .transition-section {
+    min-height: 80vh;
+    padding: 2rem 1rem;
+  }
+  
+  .transition-content {
+    gap: 1rem;
+  }
+  
+  #transition-header {
+    font-size: 2.5rem;
+  }
+  
+  #transition-text-1,
+  #transition-text-2 {
+    font-size: 1.6rem;
+    line-height: 1.5;
+  }
+  
+  .transition-arrow svg {
+    width: 50px;
+    height: 50px;
   }
 }
