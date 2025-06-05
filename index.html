@@ -144,9 +144,25 @@
     </div>
   </section>
 
+  <!-- Map section -->
   <div class="map-container">
+    
+    <!-- Top D3 plot -->
+    <div class="d3-plot-container" id="d3-plot-top">
+      <!-- D3 visualization will be rendered here -->
+    </div>
+    
     <button id="resetView" class="reset-button">Reset View</button>
-    <div id="map" style="width:100%; height:500px;"></div>
+    <div id="map"></div>
+    
+    
+    <!-- Map legend -->
+    <div id="map-legend" style="width:100%;display:flex;justify-content:center;margin:0 0 0 37%"></div>
+    
+    <!-- Bottom D3 plot -->
+    <div class="d3-plot-container" id="d3-plot-bottom">
+      <!-- D3 visualization will be rendered here -->
+    </div>
   </div>
 
   <!-- Intro scrollytelling steps moved below the map -->

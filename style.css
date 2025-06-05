@@ -254,14 +254,97 @@ h2 {
 
 .map-container {
   position: relative;
-  margin: 1rem 0;
+  margin: 1rem auto;
+  max-width: 1400px;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  grid-template-rows: auto auto auto;
+  gap: 0rem;
+  align-items: start;
+}
+
+#map {
+  height: 500px;
+  width: 100%;
+  grid-column: 1;
+  grid-row: 2 / 4;
+}
+
+/* D3 plot containers */
+.d3-plot-container {
+  width: 100%;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+#d3-plot-top {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+#d3-plot-bottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+
+
+/* Map container design changes based on screen size */
+@media (max-width: 1200px) {
+  .map-container {
+    grid-template-columns: 1fr 350px;
+    max-width: 1200px;
+  }
+  
+  .d3-plot-container {
+    height: 250px;
+  }
+  
+  #map {
+    height: 520px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .map-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    max-width: 800px;
+  }
+  
+  .reset-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  #map {
+    grid-column: 1;
+    grid-row: 2;
+    height: 450px;
+  }
+  
+  #d3-plot-top {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  
+  #d3-plot-bottom {
+    grid-column: 1;
+    grid-row: 4;
+  }
+  
+  .d3-plot-container {
+    height: 300px;
+  }
 }
 
 .reset-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
+  grid-column: 1 / 3;
+  grid-row: 1;
+  justify-self: end;
   padding: 8px 16px;
   background-color: white;
   border: 1px solid #ccc;
@@ -269,6 +352,7 @@ h2 {
   cursor: pointer;
   font-size: 14px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
 .reset-button:hover {
