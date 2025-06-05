@@ -372,7 +372,21 @@ function initLayeredScrolling() {
     const scrollTop = window.pageYOffset;
     const containerTop = scrollContainer.offsetTop;
     const containerHeight = scrollContainer.offsetHeight;
+    const containerBottom = containerTop + containerHeight;
     const progress = Math.max(0, Math.min(1, (scrollTop - containerTop) / (containerHeight * 0.8)));
+    
+    // Hide all text boxes if we're completely past the scrollytelling section
+    if (scrollTop > containerBottom + 200) { // Added buffer to ensure they disappear
+      textBoxes.forEach(box => {
+        box.style.display = 'none';
+      });
+      return;
+    } else {
+      // Show text boxes when we're in or approaching the section
+      textBoxes.forEach(box => {
+        box.style.display = 'block';
+      });
+    }
     
     textBoxes.forEach((box, index) => {
       // Each text box appears at different scroll progress points
@@ -462,7 +476,7 @@ function initLayeredScrolling() {
           box.style.opacity = 0.4;
         }
       } else if (progress > endProgress) {
-        // Box has passed through - position above screen
+        // Box has passed through - position above screen and hide
         box.style.top = '-20vh';
         box.style.opacity = 0;
         box.classList.remove('active', 'passing');
@@ -943,6 +957,8 @@ function initCountrySection() {
     const headlineRect = countryHeadlineSection.getBoundingClientRect();
     const visualRect = countrySection.getBoundingClientRect();
     const transitionRect = document.getElementById('transition-section').getBoundingClientRect();
+    const countryConclusion = document.getElementById('country-conclusion');
+    const countryConclusionSection = document.getElementById('country-conclusion-section');
     const viewportHeight = window.innerHeight;
     
     // Handle headline section
@@ -995,6 +1011,16 @@ function initCountrySection() {
       });
     }
     
+    // Handle country conclusion section
+    if (countryConclusionSection) {
+      const conclusionRect = countryConclusionSection.getBoundingClientRect();
+      if (conclusionRect.top <= viewportHeight * 0.8 && conclusionRect.bottom >= 0) {
+        countryConclusion.classList.add('visible');
+      } else {
+        countryConclusion.classList.remove('visible');
+      }
+    }
+    
     // Handle transition section fade-in
     if (transitionRect.top <= viewportHeight && transitionRect.bottom >= 0) {
       const transitionProgress = Math.max(0, Math.min(1, (viewportHeight - transitionRect.top) / (viewportHeight + transitionRect.height)));
@@ -1017,8 +1043,8 @@ function initCountrySection() {
         transitionText1.classList.remove('visible');
       }
       
-      // Second text and arrow appear together when 60% through the section
-      if (transitionProgress > 0.6) {
+      // Second text and arrow appear together when 30% through the section (reduced from 60%)
+      if (transitionProgress > 0.3) {
         transitionText2.classList.add('visible');
         transitionArrowSection.classList.add('visible');
       } else {
