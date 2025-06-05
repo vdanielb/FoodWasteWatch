@@ -584,10 +584,12 @@ function initLayeredScrolling() {
   updateTextBoxPositions();
 }
 
+// Initialize all visualizations when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize sidebar menu
   initSidebarMenu();
-  
+
+  // Initialize the map with default values
   drawFoodWasteMap(2023);
 
   // --- Food waste scrollytelling calculations and visuals ---
@@ -674,6 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initCausesEffectsSolutionsVisualizations();
 
   // Add this function to render the US-wide sub_sector bar chart with initial year
+  const yearSlider = document.getElementById('year-slider');
   const initialYear = yearSlider ? +yearSlider.value : 2023;
   drawFoodWasteBySubSectorBar({ year: initialYear, state: '' });
   drawFoodWasteByFoodTypeBar({ year: initialYear, state: '' });
@@ -1227,107 +1230,251 @@ function initCausesEffectsSolutionsVisualizations() {
 
 function initCausesChart() {
     const container = d3.select('#waste-causes-chart');
-    const width = container.node().getBoundingClientRect().width;
-    const height = 400;
+    if (container.empty()) return;
+    
+    // Clear any existing content
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width || 400;
+    const height = 550; // Increased height for better layout
     
     const svg = container.append('svg')
         .attr('width', width)
         .attr('height', height);
     
+    // Enhanced data with more categories and details
     const data = [
-        { category: 'Consumer Level', value: 43, color: '#4CAF50' },
-        { category: 'Date Label Confusion', value: 20, color: '#2196F3' },
-        { category: 'Large Portions', value: 15, color: '#FFC107' },
-        { category: 'Storage Issues', value: 12, color: '#9C27B0' },
-        { category: 'Other', value: 10, color: '#FF5722' }
+        { category: 'Consumer Overbuying', value: 21, color: '#e74c3c', description: 'Impulse purchases and poor planning' },
+        { category: 'Restaurant Portions', value: 17, color: '#3498db', description: 'Oversized servings in food service' },
+        { category: 'Date Label Confusion', value: 15, color: '#f39c12', description: '"Best by" vs "use by" misunderstanding' },
+        { category: 'Improper Storage', value: 12, color: '#9b59b6', description: 'Poor temperature and humidity control' },
+        { category: 'Cosmetic Standards', value: 11, color: '#1abc9c', description: 'Rejection of "imperfect" produce' },
+        { category: 'Supply Chain Issues', value: 9, color: '#95a5a6', description: 'Transportation and logistics problems' },
+        { category: 'Overproduction', value: 8, color: '#e67e22', description: 'Farming and manufacturing excess' },
+        { category: 'Other Factors', value: 7, color: '#34495e', description: 'Equipment failures, contamination, etc.' }
     ];
     
-    const radius = Math.min(width, height) / 2 - 40;
+    const radius = Math.min(width, height - 100) / 2 - 60;
     const arc = d3.arc()
-        .innerRadius(radius * 0.6)
-        .outerRadius(radius);
+        .innerRadius(radius * 0.5)
+        .outerRadius(radius)
+        .cornerRadius(3);
+    
+    const outerArc = d3.arc()
+        .innerRadius(radius * 1.1)
+        .outerRadius(radius * 1.1);
     
     const pie = d3.pie()
         .value(d => d.value)
-        .sort(null);
+        .sort(null)
+        .padAngle(0.01);
     
     const g = svg.append('g')
-        .attr('transform', `translate(${width/2}, ${height/2})`);
+        .attr('transform', `translate(${width/2}, ${height/2 - 20})`);
     
     // Add title
     svg.append('text')
         .attr('x', width/2)
-        .attr('y', 30)
+        .attr('y', 25)
         .attr('text-anchor', 'middle')
-        .style('font-size', '20px')
+        .style('font-size', '22px')
         .style('font-weight', 'bold')
-        .text('Causes of Food Waste');
+        .style('fill', '#2c3e50')
+        .text('Major Causes of Food Waste');
     
-    // Create pie chart segments
-    const path = g.selectAll('path')
+    // Add subtitle
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 45)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('fill', '#7f8c8d')
+        .text('Distribution of waste factors in the US food system');
+    
+    // Create tooltip
+    const tooltip = d3.select('body').append('div')
+        .attr('class', 'causes-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.9)')
+        .style('color', 'white')
+        .style('padding', '12px')
+        .style('border-radius', '8px')
+        .style('font-size', '13px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .style('z-index', 1000);
+    
+    // Create pie chart segments with animation
+    const arcs = g.selectAll('.arc')
         .data(pie(data))
-        .enter()
-        .append('path')
+        .enter().append('g')
+        .attr('class', 'arc');
+    
+    const paths = arcs.append('path')
         .attr('d', arc)
         .attr('fill', d => d.data.color)
         .attr('stroke', 'white')
         .style('stroke-width', '2px')
-        .style('opacity', 0)
-        .transition()
-        .duration(1000)
-        .style('opacity', 0.8);
+        .style('opacity', 0.85)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1)
+                .attr('transform', 'scale(1.05)');
+            
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', 1);
+            
+            tooltip.html(`
+                <div style="text-align: center;">
+                    <strong>${d.data.category}</strong><br/>
+                    <span style="font-size: 16px; color: ${d.data.color};">${d.data.value}%</span><br/>
+                    <span style="font-size: 11px; opacity: 0.9;">${d.data.description}</span>
+                </div>
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.85)
+                .attr('transform', 'scale(1)');
+            
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
     
-    // Add labels
-    const labelArc = d3.arc()
-        .innerRadius(radius * 0.8)
-        .outerRadius(radius * 0.8);
+    // Animate the pie chart
+    paths.transition()
+        .delay((d, i) => i * 100)
+        .duration(800)
+        .attrTween('d', function(d) {
+            const interpolate = d3.interpolate({startAngle: 0, endAngle: 0}, d);
+            return function(t) { return arc(interpolate(t)); };
+        });
     
-    g.selectAll('text')
-        .data(pie(data))
-        .enter()
-        .append('text')
-        .attr('transform', d => `translate(${labelArc.centroid(d)})`)
-        .attr('dy', '0.35em')
-        .style('text-anchor', 'middle')
-        .style('font-size', '14px')
-        .style('opacity', 0)
-        .text(d => `${d.data.category}: ${d.data.value}%`)
-        .transition()
-        .duration(1000)
-        .style('opacity', 1);
+    // Add polyline labels for better readability
+    const polylines = arcs.append('polyline')
+        .attr('stroke', '#666')
+        .attr('stroke-width', 1)
+        .attr('fill', 'none')
+        .style('opacity', 0);
     
-    // Add hover effects
-    path.on('mouseover', function(event, d) {
-        d3.select(this)
-            .transition()
-            .duration(200)
-            .style('opacity', 1);
-    })
-    .on('mouseout', function() {
-        d3.select(this)
-            .transition()
-            .duration(200)
-            .style('opacity', 0.8);
-    });
+    const labels = arcs.append('text')
+        .style('font-size', '12px')
+        .style('font-weight', '500')
+        .style('opacity', 0);
+    
+    // Position labels with polylines
+    setTimeout(() => {
+        arcs.each(function(d) {
+            const centroid = arc.centroid(d);
+            const outerCentroid = outerArc.centroid(d);
+            const labelPos = outerArc.centroid(d);
+            labelPos[0] = radius * 1.3 * (midAngle(d) < Math.PI ? 1 : -1);
+            
+            d3.select(this).select('polyline')
+                .attr('points', [centroid, outerCentroid, labelPos])
+                .transition()
+                .duration(800)
+                .style('opacity', 0.7);
+            
+            d3.select(this).select('text')
+                .attr('transform', `translate(${labelPos})`)
+                .attr('text-anchor', midAngle(d) < Math.PI ? 'start' : 'end')
+                .text(`${d.data.category} (${d.data.value}%)`)
+                .transition()
+                .duration(800)
+                .style('opacity', 1);
+        });
+    }, 1000);
+    
+    function midAngle(d) {
+        return d.startAngle + (d.endAngle - d.startAngle) / 2;
+    }
+    
+    // Add center text
+    g.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '-0.5em')
+        .style('font-size', '24px')
+        .style('font-weight', 'bold')
+        .style('fill', '#2c3e50')
+        .text('Food Waste');
+    
+    g.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '1em')
+        .style('font-size', '16px')
+        .style('fill', '#7f8c8d')
+        .text('Contributing Factors');
 }
 
 function initEffectsChart() {
     const container = d3.select('#waste-effects-chart');
-    const width = container.node().getBoundingClientRect().width;
-    const height = 400;
+    if (container.empty()) return;
+    
+    // Clear any existing content
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width || 400;
+    const height = 550;
     
     const svg = container.append('svg')
         .attr('width', width)
         .attr('height', height);
     
+    // Enhanced data with multiple metrics and detailed information
     const data = [
-        { category: 'Greenhouse Gases', value: 8, unit: '%' },
-        { category: 'Water Waste', value: 21, unit: '%' },
-        { category: 'Land Use', value: 28, unit: '%' },
-        { category: 'Energy Waste', value: 15, unit: '%' }
+        { 
+            category: 'Greenhouse Gas Emissions', 
+            percentage: 8, 
+            absoluteValue: '170 million tons CO₂e',
+            icon: '🌡️',
+            description: 'Equivalent to 37 million cars on the road',
+            color: '#e74c3c'
+        },
+        { 
+            category: 'Water Consumption', 
+            percentage: 21, 
+            absoluteValue: '21 trillion gallons',
+            icon: '💧',
+            description: 'Could supply 500 million people for a year',
+            color: '#3498db'
+        },
+        { 
+            category: 'Agricultural Land Use', 
+            percentage: 28, 
+            absoluteValue: '56 million acres',
+            icon: '🌱',
+            description: 'Area larger than the state of Nebraska',
+            color: '#27ae60'
+        },
+        { 
+            category: 'Energy Consumption', 
+            percentage: 15, 
+            absoluteValue: '350 trillion BTUs',
+            icon: '⚡',
+            description: 'Powers 3 million homes for a year',
+            color: '#f39c12'
+        },
+        { 
+            category: 'Economic Loss', 
+            percentage: 35, 
+            absoluteValue: '$408 billion',
+            icon: '💰',
+            description: 'Lost economic value annually',
+            color: '#9b59b6'
+        }
     ];
     
-    const margin = { top: 60, right: 20, bottom: 60, left: 60 };
+    const margin = { top: 80, right: 30, bottom: 100, left: 80 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     
@@ -1335,46 +1482,96 @@ function initEffectsChart() {
     const x = d3.scaleBand()
         .domain(data.map(d => d.category))
         .range([0, innerWidth])
-        .padding(0.3);
+        .padding(0.2);
     
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .domain([0, d3.max(data, d => d.percentage) * 1.1])
         .range([innerHeight, 0]);
     
-    // Create axes
-    const xAxis = d3.axisBottom(x)
-        .tickSize(0);
+    // Create gradient definitions
+    const defs = svg.append('defs');
+    data.forEach((d, i) => {
+        const gradient = defs.append('linearGradient')
+            .attr('id', `gradient-${i}`)
+            .attr('gradientUnits', 'userSpaceOnUse')
+            .attr('x1', 0).attr('y1', innerHeight)
+            .attr('x2', 0).attr('y2', 0);
+        
+        gradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', d.color)
+            .attr('stop-opacity', 0.8);
+        
+        gradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', d.color)
+            .attr('stop-opacity', 1);
+    });
     
-    const yAxis = d3.axisLeft(y)
-        .ticks(5)
-        .tickFormat(d => d + '%');
-    
-    // Add axes
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
-        .call(xAxis)
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)')
-        .style('text-anchor', 'end')
-        .attr('dx', '-.8em')
-        .attr('dy', '.15em')
-        .style('font-size', '12px');
-    
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .call(yAxis);
+    // Create tooltip
+    const tooltip = d3.select('body').append('div')
+        .attr('class', 'effects-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.9)')
+        .style('color', 'white')
+        .style('padding', '15px')
+        .style('border-radius', '8px')
+        .style('font-size', '13px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .style('z-index', 1000)
+        .style('box-shadow', '0 4px 15px rgba(0,0,0,0.3)');
     
     // Add title
     svg.append('text')
         .attr('x', width/2)
-        .attr('y', margin.top/2)
+        .attr('y', 25)
         .attr('text-anchor', 'middle')
-        .style('font-size', '20px')
+        .style('font-size', '22px')
         .style('font-weight', 'bold')
+        .style('fill', '#2c3e50')
         .text('Environmental Impact of Food Waste');
     
-    // Add bars with animation
+    // Add subtitle
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 45)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('fill', '#7f8c8d')
+        .text('Percentage of total US resource consumption affected by food waste');
+    
+    // Create axes with styling
+    const xAxis = d3.axisBottom(x)
+        .tickSize(0)
+        .tickPadding(15);
+    
+    const yAxis = d3.axisLeft(y)
+        .ticks(4)
+        .tickFormat(d => d + '%')
+        .tickSize(-innerWidth);
+    
+    // Add grid lines
     svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis)
+        .selectAll('line')
+        .style('stroke', '#ecf0f1')
+        .style('stroke-width', 1);
+    
+    // Add y-axis
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis)
+        .selectAll('text')
+        .style('font-size', '11px')
+        .style('fill', '#7f8c8d');
+    
+    // Remove y-axis domain line
+    svg.select('.domain').remove();
+    
+    // Add bars with enhanced animation
+    const bars = svg.append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
         .selectAll('rect')
         .data(data)
@@ -1384,161 +1581,482 @@ function initEffectsChart() {
         .attr('y', innerHeight)
         .attr('width', x.bandwidth())
         .attr('height', 0)
-        .attr('fill', '#4CAF50')
-        .attr('opacity', 0.8)
-        .transition()
-        .duration(1000)
-        .attr('y', d => y(d.value))
-        .attr('height', d => innerHeight - y(d.value));
+        .attr('fill', (d, i) => `url(#gradient-${i})`)
+        .attr('rx', 4)
+        .attr('ry', 4)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1.02)');
+            
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', 1);
+            
+            tooltip.html(`
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; margin-bottom: 5px;">${d.icon}</div>
+                    <strong>${d.category}</strong><br/>
+                    <span style="font-size: 18px; color: ${d.color}; font-weight: bold;">${d.percentage}%</span><br/>
+                    <span style="font-size: 14px; margin: 5px 0; display: block;">${d.absoluteValue}</span>
+                    <span style="font-size: 11px; opacity: 0.9; font-style: italic;">${d.description}</span>
+                </div>
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1)');
+            
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
     
-    // Add value labels
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('text')
-        .data(data)
-        .enter()
-        .append('text')
-        .attr('x', d => x(d.category) + x.bandwidth() / 2)
-        .attr('y', d => y(d.value) - 5)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '12px')
-        .style('opacity', 0)
-        .text(d => d.value + d.unit)
-        .transition()
+    // Animate bars
+    bars.transition()
+        .delay((d, i) => i * 150)
         .duration(1000)
-        .style('opacity', 1);
+        .ease(d3.easeBounceOut)
+        .attr('y', d => y(d.percentage))
+        .attr('height', d => innerHeight - y(d.percentage));
+    
+    // Add value labels with icons
+    const labelGroup = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+    
+    data.forEach((d, i) => {
+        // Add icon above bar
+        labelGroup.append('text')
+            .attr('x', x(d.category) + x.bandwidth() / 2)
+            .attr('y', y(d.percentage) - 35)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '20px')
+            .style('opacity', 0)
+            .text(d.icon)
+            .transition()
+            .delay(i * 150 + 1000)
+            .duration(500)
+            .style('opacity', 1);
+        
+        // Add percentage label
+        labelGroup.append('text')
+            .attr('x', x(d.category) + x.bandwidth() / 2)
+            .attr('y', y(d.percentage) - 15)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .style('font-weight', 'bold')
+            .style('fill', d.color)
+            .style('opacity', 0)
+            .text(d.percentage + '%')
+            .transition()
+            .delay(i * 150 + 1200)
+            .duration(500)
+            .style('opacity', 1);
+    });
+    
+    // Add x-axis with wrapped labels
+    const xAxisGroup = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis);
+    
+    xAxisGroup.selectAll('text')
+        .style('font-size', '11px')
+        .style('fill', '#7f8c8d')
+        .style('font-weight', '500')
+        .each(function() {
+            const text = d3.select(this);
+            const words = text.text().split(' ');
+            text.text('');
+            
+            words.forEach((word, i) => {
+                text.append('tspan')
+                    .attr('x', 0)
+                    .attr('dy', i === 0 ? '0.8em' : '1.2em')
+                    .text(word);
+            });
+        });
+    
+    // Remove x-axis domain line
+    xAxisGroup.select('.domain').remove();
 }
 
 function initSolutionsChart() {
     const container = d3.select('#waste-solutions-chart');
-    const width = container.node().getBoundingClientRect().width;
-    const height = 400;
+    if (container.empty()) return;
+    
+    // Clear any existing content
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width || 400;
+    const height = 550;
     
     const svg = container.append('svg')
         .attr('width', width)
         .attr('height', height);
     
-    const data = [
-        { month: 'Jan', reduction: 5 },
-        { month: 'Feb', reduction: 8 },
-        { month: 'Mar', reduction: 12 },
-        { month: 'Apr', reduction: 15 },
-        { month: 'May', reduction: 18 },
-        { month: 'Jun', reduction: 22 },
-        { month: 'Jul', reduction: 25 },
-        { month: 'Aug', reduction: 28 },
-        { month: 'Sep', reduction: 30 },
-        { month: 'Oct', reduction: 32 },
-        { month: 'Nov', reduction: 35 },
-        { month: 'Dec', reduction: 38 }
+    // Enhanced data with multiple solution scenarios
+    const timePoints = ['Month 1', 'Month 6', 'Month 12', 'Month 18', 'Month 24', 'Month 36'];
+    
+    const scenarioData = [
+        {
+            name: 'Smart Shopping & Planning',
+            color: '#3498db',
+            icon: '📝',
+            values: [2, 8, 15, 22, 28, 30],
+            description: 'Meal planning, shopping lists, portion control'
+        },
+        {
+            name: 'Proper Food Storage',
+            color: '#27ae60',
+            icon: '🥫',
+            values: [3, 12, 20, 26, 32, 35],
+            description: 'Temperature control, container usage, rotation'
+        },
+        {
+            name: 'Composting & Recovery',
+            color: '#e74c3c',
+            icon: '♻️',
+            values: [1, 5, 10, 15, 20, 25],
+            description: 'Food rescue, composting, redistribution'
+        },
+        {
+            name: 'Technology Solutions',
+            color: '#9b59b6',
+            icon: '📱',
+            values: [1, 6, 12, 18, 25, 28],
+            description: 'Apps, smart packaging, expiration tracking'
+        },
+        {
+            name: 'Combined Approach',
+            color: '#f39c12',
+            icon: '🎯',
+            values: [5, 18, 32, 45, 55, 60],
+            description: 'Implementing all strategies together'
+        }
     ];
     
-    const margin = { top: 60, right: 20, bottom: 40, left: 60 };
+    const margin = { top: 80, right: 120, bottom: 60, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     
     // Create scales
-    const x = d3.scaleBand()
-        .domain(data.map(d => d.month))
+    const x = d3.scalePoint()
+        .domain(timePoints)
         .range([0, innerWidth])
         .padding(0.1);
     
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.reduction) * 1.1])
+        .domain([0, 70])
         .range([innerHeight, 0]);
     
-    // Create axes
-    const xAxis = d3.axisBottom(x);
+    // Create tooltip
+    const tooltip = d3.select('body').append('div')
+        .attr('class', 'solutions-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.9)')
+        .style('color', 'white')
+        .style('padding', '12px')
+        .style('border-radius', '8px')
+        .style('font-size', '13px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .style('z-index', 1000);
+    
+    // Add title and subtitle
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 25)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '22px')
+        .style('font-weight', 'bold')
+        .style('fill', '#2c3e50')
+        .text('Food Waste Reduction Strategies');
+    
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 45)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('fill', '#7f8c8d')
+        .text('Projected waste reduction over time with different approaches');
+    
+    // Create axes with styling
+    const xAxis = d3.axisBottom(x)
+        .tickSize(0)
+        .tickPadding(15);
+    
     const yAxis = d3.axisLeft(y)
         .ticks(5)
-        .tickFormat(d => d + '%');
+        .tickFormat(d => d + '%')
+        .tickSize(-innerWidth);
+    
+    // Add grid lines
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis)
+        .selectAll('line')
+        .style('stroke', '#ecf0f1')
+        .style('stroke-width', 1);
     
     // Add axes
     svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
-        .call(xAxis);
-    
-    svg.append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .call(yAxis);
-    
-    // Add title
-    svg.append('text')
-        .attr('x', width/2)
-        .attr('y', margin.top/2)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '20px')
-        .style('font-weight', 'bold')
-        .text('Monthly Waste Reduction Progress');
-    
-    // Create line
-    const line = d3.line()
-        .x(d => x(d.month) + x.bandwidth() / 2)
-        .y(d => y(d.reduction))
-        .curve(d3.curveMonotoneX);
-    
-    // Add line with animation
-    svg.append('path')
-        .datum(data)
-        .attr('fill', 'none')
-        .attr('stroke', '#4CAF50')
-        .attr('stroke-width', 3)
-        .attr('d', line)
-        .style('opacity', 0)
-        .transition()
-        .duration(1000)
-        .style('opacity', 1);
-    
-    // Add dots with animation
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('circle')
-        .data(data)
-        .enter()
-        .append('circle')
-        .attr('cx', d => x(d.month) + x.bandwidth() / 2)
-        .attr('cy', innerHeight)
-        .attr('r', 5)
-        .attr('fill', '#4CAF50')
-        .transition()
-        .duration(1000)
-        .attr('cy', d => y(d.reduction));
-    
-    // Add value labels
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis)
         .selectAll('text')
-        .data(data)
-        .enter()
-        .append('text')
-        .attr('x', d => x(d.month) + x.bandwidth() / 2)
-        .attr('y', d => y(d.reduction) - 10)
-        .attr('text-anchor', 'middle')
+        .style('font-size', '11px')
+        .style('fill', '#7f8c8d');
+    
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis)
+        .selectAll('text')
         .style('font-size', '12px')
-        .style('opacity', 0)
-        .text(d => d.reduction + '%')
-        .transition()
-        .duration(1000)
-        .style('opacity', 1);
+        .style('fill', '#7f8c8d');
+    
+    // Remove domain lines
+    svg.selectAll('.domain').remove();
+    
+    // Create line generator
+    const line = d3.line()
+        .x((d, i) => x(timePoints[i]))
+        .y(d => y(d))
+        .curve(d3.curveCardinal);
+    
+    // Add lines for each scenario
+    const chartGroup = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+    
+    scenarioData.forEach((scenario, scenarioIndex) => {
+        // Add line path
+        const path = chartGroup.append('path')
+            .datum(scenario.values)
+            .attr('fill', 'none')
+            .attr('stroke', scenario.color)
+            .attr('stroke-width', 3)
+            .attr('opacity', 0.8)
+            .attr('d', line)
+            .style('cursor', 'pointer');
+        
+        // Animate line drawing
+        const totalLength = path.node().getTotalLength();
+        path
+            .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+            .attr('stroke-dashoffset', totalLength)
+            .transition()
+            .delay(scenarioIndex * 200)
+            .duration(1500)
+            .attr('stroke-dashoffset', 0);
+        
+        // Add hover effects to line
+        path.on('mouseover', function() {
+            d3.select(this)
+                .attr('stroke-width', 5)
+                .attr('opacity', 1);
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .attr('stroke-width', 3)
+                .attr('opacity', 0.8);
+        });
+        
+        // Add data points
+        chartGroup.selectAll(`.dots-${scenarioIndex}`)
+            .data(scenario.values)
+            .enter()
+            .append('circle')
+            .attr('class', `dots-${scenarioIndex}`)
+            .attr('cx', (d, i) => x(timePoints[i]))
+            .attr('cy', d => y(d))
+            .attr('r', 6)
+            .attr('fill', scenario.color)
+            .attr('stroke', 'white')
+            .attr('stroke-width', 2)
+            .style('cursor', 'pointer')
+            .style('opacity', 0)
+            .on('mouseover', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('r', 8);
+                
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', 1);
+                
+                const index = scenario.values.indexOf(d);
+                tooltip.html(`
+                    <div style="text-align: center;">
+                        <div style="font-size: 16px; margin-bottom: 5px;">${scenario.icon}</div>
+                        <strong>${scenario.name}</strong><br/>
+                        <span style="color: ${scenario.color}; font-weight: bold;">${d}% reduction</span><br/>
+                        <span style="font-size: 11px;">at ${timePoints[index]}</span><br/>
+                        <span style="font-size: 10px; opacity: 0.8; font-style: italic;">${scenario.description}</span>
+                    </div>
+                `)
+                    .style('left', (event.pageX + 10) + 'px')
+                    .style('top', (event.pageY - 10) + 'px');
+            })
+            .on('mouseout', function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('r', 6);
+                
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            })
+            .transition()
+            .delay(scenarioIndex * 200 + 1000)
+            .duration(800)
+            .style('opacity', 1);
+    });
+    
+    // Add legend
+    const legend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right + 10}, ${margin.top + 20})`);
+    
+    scenarioData.forEach((scenario, i) => {
+        const legendItem = legend.append('g')
+            .attr('transform', `translate(0, ${i * 25})`)
+            .style('cursor', 'pointer');
+        
+        // Legend line
+        legendItem.append('line')
+            .attr('x1', 0)
+            .attr('x2', 20)
+            .attr('y1', 0)
+            .attr('y2', 0)
+            .attr('stroke', scenario.color)
+            .attr('stroke-width', 3);
+        
+        // Legend dot
+        legendItem.append('circle')
+            .attr('cx', 10)
+            .attr('cy', 0)
+            .attr('r', 4)
+            .attr('fill', scenario.color)
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1);
+        
+        // Legend text
+        legendItem.append('text')
+            .attr('x', 25)
+            .attr('y', 0)
+            .attr('dy', '0.35em')
+            .style('font-size', '11px')
+            .style('fill', '#2c3e50')
+            .text(`${scenario.icon} ${scenario.name}`);
+        
+        // Legend hover effects
+        legendItem.on('mouseover', function() {
+            chartGroup.selectAll('path')
+                .attr('opacity', 0.2);
+            chartGroup.selectAll(`.dots-${i}`)
+                .attr('opacity', 0.2);
+            
+            chartGroup.selectAll('path')
+                .filter((d, index) => index === i)
+                .attr('opacity', 1)
+                .attr('stroke-width', 5);
+            chartGroup.selectAll(`.dots-${i}`)
+                .attr('opacity', 1);
+        })
+        .on('mouseout', function() {
+            chartGroup.selectAll('path')
+                .attr('opacity', 0.8)
+                .attr('stroke-width', 3);
+            chartGroup.selectAll('circle')
+                .attr('opacity', 1);
+        });
+    });
+    
+    // Add goal line
+    chartGroup.append('line')
+        .attr('x1', 0)
+        .attr('x2', innerWidth)
+        .attr('y1', y(50))
+        .attr('y2', y(50))
+        .attr('stroke', '#e74c3c')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5')
+        .attr('opacity', 0.7);
+    
+    chartGroup.append('text')
+        .attr('x', innerWidth - 5)
+        .attr('y', y(50) - 5)
+        .attr('text-anchor', 'end')
+        .style('font-size', '11px')
+        .style('fill', '#e74c3c')
+        .style('font-weight', 'bold')
+        .text('Target: 50% reduction');
 }
 
 function initImpactChart() {
     const container = d3.select('#waste-impact-chart');
-    const width = container.node().getBoundingClientRect().width;
-    const height = 400;
+    if (container.empty()) return;
+    
+    // Clear any existing content
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width || 400;
+    const height = 550;
     
     const svg = container.append('svg')
         .attr('width', width)
         .attr('height', height);
     
+    // Enhanced economic impact data
     const data = [
-        { category: 'Production', value: 40, color: '#4CAF50' },
-        { category: 'Transportation', value: 25, color: '#2196F3' },
-        { category: 'Storage', value: 20, color: '#FFC107' },
-        { category: 'Disposal', value: 15, color: '#FF5722' }
+        { 
+            category: 'Household Impact', 
+            currentCost: 1500, 
+            potentialSavings: 700,
+            icon: '🏠',
+            description: 'Average annual cost per household',
+            color: '#e74c3c'
+        },
+        { 
+            category: 'Healthcare Costs', 
+            currentCost: 890, 
+            potentialSavings: 400,
+            icon: '🏥',
+            description: 'Food insecurity-related health expenses',
+            color: '#3498db'
+        },
+        { 
+            category: 'Environmental Cleanup', 
+            currentCost: 2100, 
+            potentialSavings: 1200,
+            icon: '🌍',
+            description: 'Climate and environmental mitigation costs',
+            color: '#27ae60'
+        },
+        { 
+            category: 'Business Losses', 
+            currentCost: 1800, 
+            potentialSavings: 900,
+            icon: '🏢',
+            description: 'Corporate waste management and lost revenue',
+            color: '#f39c12'
+        },
+        { 
+            category: 'Infrastructure', 
+            currentCost: 950, 
+            potentialSavings: 480,
+            icon: '🚛',
+            description: 'Transportation and disposal infrastructure',
+            color: '#9b59b6'
+        }
     ];
     
-    const margin = { top: 60, right: 20, bottom: 40, left: 60 };
+    const margin = { top: 80, right: 60, bottom: 100, left: 90 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     
@@ -1546,70 +2064,331 @@ function initImpactChart() {
     const x = d3.scaleBand()
         .domain(data.map(d => d.category))
         .range([0, innerWidth])
-        .padding(0.3);
+        .padding(0.2);
     
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .domain([0, d3.max(data, d => d.currentCost) * 1.1])
         .range([innerHeight, 0]);
     
-    // Create axes
-    const xAxis = d3.axisBottom(x);
-    const yAxis = d3.axisLeft(y)
-        .ticks(5)
-        .tickFormat(d => d + '%');
+    // Create tooltip
+    const tooltip = d3.select('body').append('div')
+        .attr('class', 'impact-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.9)')
+        .style('color', 'white')
+        .style('padding', '15px')
+        .style('border-radius', '8px')
+        .style('font-size', '13px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .style('z-index', 1000)
+        .style('max-width', '300px');
     
-    // Add axes
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
-        .call(xAxis);
-    
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .call(yAxis);
-    
-    // Add title
+    // Add title and subtitle
     svg.append('text')
         .attr('x', width/2)
-        .attr('y', margin.top/2)
+        .attr('y', 25)
         .attr('text-anchor', 'middle')
-        .style('font-size', '20px')
+        .style('font-size', '22px')
         .style('font-weight', 'bold')
-        .text('Economic Impact of Food Waste');
+        .style('fill', '#2c3e50')
+        .text('Economic Impact & Savings Potential');
     
-    // Add bars with animation
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 45)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('fill', '#7f8c8d')
+        .text('Annual costs per household and potential savings from waste reduction');
+    
+    // Create gradient definitions for bars
+    const defs = svg.append('defs');
+    data.forEach((d, i) => {
+        // Gradient for current cost bars
+        const costGradient = defs.append('linearGradient')
+            .attr('id', `cost-gradient-${i}`)
+            .attr('gradientUnits', 'userSpaceOnUse')
+            .attr('x1', 0).attr('y1', innerHeight)
+            .attr('x2', 0).attr('y2', 0);
+        
+        costGradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', d.color)
+            .attr('stop-opacity', 0.8);
+        
+        costGradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', d.color)
+            .attr('stop-opacity', 1);
+        
+        // Gradient for savings bars
+        const savingsGradient = defs.append('linearGradient')
+            .attr('id', `savings-gradient-${i}`)
+            .attr('gradientUnits', 'userSpaceOnUse')
+            .attr('x1', 0).attr('y1', innerHeight)
+            .attr('x2', 0).attr('y2', 0);
+        
+        savingsGradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', '#2ecc71')
+            .attr('stop-opacity', 0.6);
+        
+        savingsGradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', '#27ae60')
+            .attr('stop-opacity', 0.8);
+    });
+    
+    // Create axes with styling
+    const xAxis = d3.axisBottom(x)
+        .tickSize(0)
+        .tickPadding(15);
+    
+    const yAxis = d3.axisLeft(y)
+        .ticks(4)
+        .tickFormat(d => '$' + d3.format(',')(d))
+        .tickSize(-innerWidth);
+    
+    // Add grid lines
     svg.append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('rect')
+        .call(yAxis)
+        .selectAll('line')
+        .style('stroke', '#ecf0f1')
+        .style('stroke-width', 1);
+    
+    // Add y-axis
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis)
+        .selectAll('text')
+        .style('font-size', '10px')
+        .style('fill', '#7f8c8d');
+    
+    // Remove y-axis domain line
+    svg.select('.domain').remove();
+    
+    const chartGroup = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+    
+    // Add current cost bars
+    const costBars = chartGroup.selectAll('.cost-bar')
         .data(data)
         .enter()
         .append('rect')
+        .attr('class', 'cost-bar')
         .attr('x', d => x(d.category))
         .attr('y', innerHeight)
         .attr('width', x.bandwidth())
         .attr('height', 0)
-        .attr('fill', d => d.color)
-        .attr('opacity', 0.8)
-        .transition()
-        .duration(1000)
-        .attr('y', d => y(d.value))
-        .attr('height', d => innerHeight - y(d.value));
+        .attr('fill', (d, i) => `url(#cost-gradient-${i})`)
+        .attr('rx', 4)
+        .attr('ry', 4)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1.02)');
+            
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', 1);
+            
+            tooltip.html(`
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">${d.icon}</div>
+                    <strong>${d.category}</strong><br/>
+                    <div style="margin: 8px 0;">
+                        <span style="color: ${d.color}; font-weight: bold;">Current Cost: $${d.currentCost}</span><br/>
+                        <span style="color: #27ae60; font-weight: bold;">Potential Savings: $${d.potentialSavings}</span>
+                    </div>
+                    <span style="font-size: 11px; opacity: 0.9; font-style: italic;">${d.description}</span>
+                </div>
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1)');
+            
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
     
-    // Add value labels
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('text')
+    // Add savings bars (overlaid)
+    const savingsBars = chartGroup.selectAll('.savings-bar')
         .data(data)
         .enter()
-        .append('text')
-        .attr('x', d => x(d.category) + x.bandwidth() / 2)
-        .attr('y', d => y(d.value) - 5)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '12px')
-        .style('opacity', 0)
-        .text(d => d.value + '%')
-        .transition()
+        .append('rect')
+        .attr('class', 'savings-bar')
+        .attr('x', d => x(d.category) + x.bandwidth() * 0.1)
+        .attr('y', innerHeight)
+        .attr('width', x.bandwidth() * 0.8)
+        .attr('height', 0)
+        .attr('fill', (d, i) => `url(#savings-gradient-${i})`)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1.02)');
+            
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', 1);
+            
+            const savingsPercentage = ((d.potentialSavings / d.currentCost) * 100).toFixed(0);
+            tooltip.html(`
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">💰</div>
+                    <strong>Potential Savings</strong><br/>
+                    <span style="color: #27ae60; font-weight: bold; font-size: 16px;">$${d.potentialSavings}</span><br/>
+                    <span style="font-size: 12px;">(${savingsPercentage}% reduction in ${d.category})</span><br/>
+                    <span style="font-size: 11px; opacity: 0.9; margin-top: 5px; display: block;">Through effective waste reduction strategies</span>
+                </div>
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('transform', 'scale(1)');
+            
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
+    
+    // Animate cost bars
+    costBars.transition()
+        .delay((d, i) => i * 150)
         .duration(1000)
-        .style('opacity', 1);
+        .ease(d3.easeBounceOut)
+        .attr('y', d => y(d.currentCost))
+        .attr('height', d => innerHeight - y(d.currentCost));
+    
+    // Animate savings bars
+    savingsBars.transition()
+        .delay((d, i) => i * 150 + 500)
+        .duration(1000)
+        .ease(d3.easeBounceOut)
+        .attr('y', d => y(d.potentialSavings))
+        .attr('height', d => innerHeight - y(d.potentialSavings));
+    
+    // Add value labels
+    data.forEach((d, i) => {
+        // Current cost labels
+        chartGroup.append('text')
+            .attr('x', x(d.category) + x.bandwidth() / 2)
+            .attr('y', y(d.currentCost) - 25)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '12px')
+            .style('font-weight', 'bold')
+            .style('fill', d.color)
+            .style('opacity', 0)
+            .text('$' + d.currentCost)
+            .transition()
+            .delay(i * 150 + 1000)
+            .duration(500)
+            .style('opacity', 1);
+        
+        // Savings labels
+        chartGroup.append('text')
+            .attr('x', x(d.category) + x.bandwidth() / 2)
+            .attr('y', y(d.potentialSavings) - 5)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '11px')
+            .style('font-weight', 'bold')
+            .style('fill', '#27ae60')
+            .style('opacity', 0)
+            .text('Save $' + d.potentialSavings)
+            .transition()
+            .delay(i * 150 + 1500)
+            .duration(500)
+            .style('opacity', 1);
+        
+        // Icon labels
+        chartGroup.append('text')
+            .attr('x', x(d.category) + x.bandwidth() / 2)
+            .attr('y', y(d.currentCost) - 45)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '18px')
+            .style('opacity', 0)
+            .text(d.icon)
+            .transition()
+            .delay(i * 150 + 800)
+            .duration(500)
+            .style('opacity', 1);
+    });
+    
+    // Add x-axis with wrapped labels
+    const xAxisGroup = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis);
+    
+    xAxisGroup.selectAll('text')
+        .style('font-size', '11px')
+        .style('fill', '#7f8c8d')
+        .style('font-weight', '500')
+        .each(function() {
+            const text = d3.select(this);
+            const words = text.text().split(' ');
+            text.text('');
+            
+            words.forEach((word, i) => {
+                text.append('tspan')
+                    .attr('x', 0)
+                    .attr('dy', i === 0 ? '0.8em' : '1.2em')
+                    .text(word);
+            });
+        });
+    
+    // Remove x-axis domain line
+    xAxisGroup.select('.domain').remove();
+    
+    // Add legend
+    const legend = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${height - 45})`);
+    
+    legend.append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', '#e74c3c')
+        .attr('rx', 2);
+    
+    legend.append('text')
+        .attr('x', 20)
+        .attr('y', 12)
+        .style('font-size', '12px')
+        .style('fill', '#2c3e50')
+        .text('Current Annual Cost');
+    
+    legend.append('rect')
+        .attr('x', 180)
+        .attr('y', 0)
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', '#27ae60')
+        .attr('rx', 2);
+    
+    legend.append('text')
+        .attr('x', 200)
+        .attr('y', 12)
+        .style('font-size', '12px')
+        .style('fill', '#2c3e50')
+        .text('Potential Savings');
 }
 
 // top k sub-sectors/food types
@@ -1993,97 +2772,5 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Remove all fullscreen-related code and update the effects chart
-function initEffectsChart(svg, width, height) {
-    const data = [
-        { category: 'Greenhouse Gases', value: 8, unit: '%' },
-        { category: 'Water Waste', value: 21, unit: '%' },
-        { category: 'Land Use', value: 28, unit: '%' },
-        { category: 'Energy Waste', value: 15, unit: '%' }
-    ];
 
-    const margin = { top: 40, right: 20, bottom: 60, left: 60 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    // Clear any existing content
-    svg.selectAll('*').remove();
-
-    // Create scales
-    const x = d3.scaleBand()
-        .domain(data.map(d => d.category))
-        .range([0, innerWidth])
-        .padding(0.3);
-
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.1])
-        .range([innerHeight, 0]);
-
-    // Create axes
-    const xAxis = d3.axisBottom(x)
-        .tickSize(0);
-
-    const yAxis = d3.axisLeft(y)
-        .ticks(5)
-        .tickFormat(d => d + '%');
-
-    // Add axes
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
-        .call(xAxis)
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)')
-        .style('text-anchor', 'end')
-        .attr('dx', '-.8em')
-        .attr('dy', '.15em')
-        .style('font-size', '12px');
-
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .call(yAxis);
-
-    // Add bars
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('rect')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', d => x(d.category))
-        .attr('y', d => y(d.value))
-        .attr('width', x.bandwidth())
-        .attr('height', d => innerHeight - y(d.value))
-        .attr('fill', '#4CAF50')
-        .attr('opacity', 0.8)
-        .on('mouseover', function(event, d) {
-            d3.select(this)
-                .attr('opacity', 1);
-        })
-        .on('mouseout', function() {
-            d3.select(this)
-                .attr('opacity', 0.8);
-        });
-
-    // Add value labels
-    svg.append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .selectAll('text')
-        .data(data)
-        .enter()
-        .append('text')
-        .attr('x', d => x(d.category) + x.bandwidth() / 2)
-        .attr('y', d => y(d.value) - 5)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '12px')
-        .text(d => d.value + d.unit);
-
-    // Add title
-    svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', margin.top / 2)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '16px')
-        .style('font-weight', 'bold')
-        .text('Environmental Impact of Food Waste');
-}
 
