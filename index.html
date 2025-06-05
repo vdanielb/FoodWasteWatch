@@ -138,7 +138,7 @@
   <!-- Transition section between country visualization and map -->
   <section id="transition-section" class="transition-section">
     <div class="transition-content">
-      <h1 id="transition-header">Did you know?</h1>
+      <h1 id="transition-header"></h1>
       <h2 id="transition-text-1"><span class="red-number">California</span> alone accounts for over <span class="red-number">10 billion pounds</span> of that waste each year.</h2>
       <h2 id="transition-text-2">Explore the map below to see how your own state compares.</h2>
       <div id="transition-arrow-section" class="transition-arrow-section">
@@ -152,16 +152,19 @@
   </section>
 
   <!-- Map section -->
-  <div class="map-container">
+  <div class="map-container" style="
+    background-color: #f5f7fa;
+    border-radius: 10px;
+    margin: 0;
+  ">
     
+    <div id="map"></div>
+    <button id="reset-map" class="reset-button">Reset Filters</button>
+
     <!-- Top D3 plot -->
     <div class="d3-plot-container" id="d3-plot-top">
       <!-- D3 visualization will be rendered here -->
-    </div>
-    
-    <button id="resetView" class="reset-button">Reset View</button>
-    <div id="map"></div>
-    
+    </div>    
     
     <!-- Map legend -->
     <div id="map-legend" style="width:100%;display:flex;justify-content:center;margin:0 0 0 37%"></div>

@@ -75,7 +75,10 @@ async function drawFoodWasteMap2023() {
       const pop = statePop2023[state];
       if (!pop) return null;
       const totalWaste = d3.sum(v, d => d.tons_waste);
-      return totalWaste / (pop / 10000); // tons per 10,000 people
+      return {
+        per10k: totalWaste / (pop / 10000),
+        totalWaste: totalWaste
+      };
     },
     d => d.state
   );
@@ -108,7 +111,7 @@ async function drawFoodWasteMap2023() {
   ]);
 
   // Compute color scale
-  const values = Array.from(wasteByState.values());
+  const values = Array.from(wasteByState.values(), d => d.per10k);
   const color = d3.scaleSequential()
     .domain([d3.min(values), d3.max(values)])
     .interpolator(d3.interpolateYlOrRd);
@@ -124,7 +127,7 @@ async function drawFoodWasteMap2023() {
       const fips = d.id.toString().padStart(2, '0');
       const stateName = stateIdToName.get(fips);
       const waste = wasteByState.get(stateName);
-      return waste ? color(waste) : '#eee';
+      return waste ? color(waste.per10k) : '#eee';
     })
     .attr('stroke', '#000')
     .attr('stroke-width', 0.8)
@@ -132,99 +135,106 @@ async function drawFoodWasteMap2023() {
     .on('mouseover', function(event, d) {
       const fips = d.id.toString().padStart(2, '0');
       const stateName = stateIdToName.get(fips);
+      // Set opacity: only hovered and selected state are fully opaque
+      states.transition().duration(200)
+        .style('opacity', s => {
+          const sFips = s.id.toString().padStart(2, '0');
+          const sName = stateIdToName.get(sFips);
+          return (s === d || sName === selectedState) ? 1 : 0.2;
+        });
+
+      // Tooltip
       const waste = wasteByState.get(stateName);
-
-      // Filter and group by food_type for this state
-      const stateFoodData = data2023.filter(row => row.state === stateName);
-      const foodTypeTotals = d3.rollups(
-        stateFoodData,
-        v => d3.sum(v, d => d.tons_waste),
-        d => d.food_type
-      );
-
-      // Tooltip HTML
-      let html = `<strong>${stateName}</strong><br/>${waste ? waste.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons per 10,000 people`;
-      html += `<div id="tooltip-barchart" style="display: flex; justify-content: center; align-items: center; margin-top: 10px;"></div>`;
+      let html = `<strong>${stateName}</strong>
+        <br/><span class="red-number">${waste ? waste.per10k.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons</span> per 10,000 people
+        <br/><span class="red-number">${waste ? waste.totalWaste.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'No data'} tons</span> total
+        `;
       tooltip.style('display', 'block').html(html);
-
-      // Draw the bar chart using D3
-      setTimeout(() => {
-        const width = 360, height = 180, margin = {left: 70, right: 10, top: 10, bottom: 60};
-        const svg = d3.select('#tooltip-barchart')
-          .append('svg')
-          .attr('width', width)
-          .attr('height', height)
-          .style('margin', 'auto')
-          .style('display', 'block');
-
-        const x = d3.scaleBand()
-          .domain(foodTypeTotals.map(d => d[0]))
-          .range([margin.left, width - margin.right])
-          .padding(0.1);
-
-        const y = d3.scaleLinear()
-          .domain([0, d3.max(foodTypeTotals, d => d[1])])
-          .nice()
-          .range([height - margin.bottom, margin.top]);
-
-        svg.append('g')
-          .selectAll('rect')
-          .data(foodTypeTotals)
-          .join('rect')
-          .attr('x', d => x(d[0]))
-          .attr('y', d => y(d[1]))
-          .attr('height', d => y(0) - y(d[1]))
-          .attr('width', x.bandwidth())
-          .attr('fill', '#69b3a2');
-
-        svg.append('g')
-          .attr('transform', `translate(0,${height - margin.bottom})`)
-          .call(d3.axisBottom(x).tickSizeOuter(0))
-          .selectAll('text')
-          .attr('transform', 'rotate(-40)')
-          .style('text-anchor', 'end');
-
-        svg.append('g')
-          .attr('transform', `translate(${margin.left},0)`)
-          .call(d3.axisLeft(y).ticks(4));
-      }, 0);
     })
     .on('mousemove', function(event) {
       tooltip.style('left', (event.pageX + 10) + 'px')
         .style('top', (event.pageY - 28) + 'px');
     })
     .on('mouseout', function() {
+      if (selectedState) {
+        states.style('opacity', s => {
+          const sFips = s.id.toString().padStart(2, '0');
+          const sName = stateIdToName.get(sFips);
+          return (sName === selectedState) ? 1 : 0.2;
+        });
+      } else {
+        states.transition().duration(200).style('opacity', 1);
+      }
       tooltip.style('display', 'none');
+
+      // // Restore opacity: only selected state is highlighted
+      // states.transition().duration(200)
+      //   .style('opacity', s => {
+      //     const sFips = s.id.toString().padStart(2, '0');
+      //     const sName = stateIdToName.get(sFips);
+      //     return (selectedState && sName === selectedState) ? 1 : 1;
+      //   });
+      // // Redraw plots for selected state (or all US if none)
+      // drawFoodWasteBySubSectorBar({ year: 2023, state: selectedState || '' });
+      // drawFoodWasteByFoodTypeBar({ year: 2023, state: selectedState || '' });
+      // tooltip.style('display', 'none');
     })
     .on('click', function(event, d) {
       const fips = d.id.toString().padStart(2, '0');
       const stateName = stateIdToName.get(fips);
-      drawFoodWasteBySubSectorBar({ year: 2023, state: stateName });
-      drawFoodWasteByFoodTypeBar({ year: 2023, state: stateName });
-      const isZoomed = d3.select(this).classed('zoomed');
-      if (isZoomed) {
-        g.transition().duration(750).attr('transform', null);
-        states.transition().duration(750).style('opacity', 1).classed('zoomed', false);
+      if (selectedState === stateName) {
+        selectedState = null;
+        drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
+        drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
+        states.transition().duration(200).style('opacity', 1);
       } else {
-        const [[x0, y0], [x1, y1]] = path.bounds(d);
-        const dx = x1 - x0;
-        const dy = y1 - y0;
-        const x = (x0 + x1) / 2;
-        const y = (y0 + y1) / 2;
-        const scale = Math.max(1, Math.min(8, 0.8 / Math.max(dx / width, dy / height)));
-        const translate = [width / 2 - scale * x, height / 2 - scale * y];
-        g.transition().duration(750)
-          .attr('transform', `translate(${translate[0]},${translate[1]}) scale(${scale})`);
-        states.transition().duration(750)
-          .style('opacity', s => (s === d ? 1 : 0.2))
-          .classed('zoomed', s => s === d);
+        selectedState = stateName;
+        // Highlight only the selected state
+        states.transition().duration(200)
+          .style('opacity', s => {
+            const sFips = s.id.toString().padStart(2, '0');
+            const sName = stateIdToName.get(sFips);
+            return (sName === selectedState) ? 1 : 0.2;
+            });
+          // Draw plots for selected state
+          drawFoodWasteBySubSectorBar({ year: 2023, state: selectedState });
+          drawFoodWasteByFoodTypeBar({ year: 2023, state: selectedState });
       }
     });
 
+    // ZOOMING FUNCTIONALITY
+    // .on('click', function(event, d) {
+    //   const fips = d.id.toString().padStart(2, '0');
+    //   const stateName = stateIdToName.get(fips);
+    //   drawFoodWasteBySubSectorBar({ year: 2023, state: stateName });
+    //   drawFoodWasteByFoodTypeBar({ year: 2023, state: stateName });
+    //   const isZoomed = d3.select(this).classed('zoomed');
+    //   if (isZoomed) {
+    //     g.transition().duration(750).attr('transform', null);
+    //     states.transition().duration(750).style('opacity', 1).classed('zoomed', false);
+    //   } else {
+    //     const [[x0, y0], [x1, y1]] = path.bounds(d);
+    //     const dx = x1 - x0;
+    //     const dy = y1 - y0;
+    //     const x = (x0 + x1) / 2;
+    //     const y = (y0 + y1) / 2;
+    //     const scale = Math.max(1, Math.min(8, 0.8 / Math.max(dx / width, dy / height)));
+    //     const translate = [width / 2 - scale * x, height / 2 - scale * y];
+    //     g.transition().duration(750)
+    //       .attr('transform', `translate(${translate[0]},${translate[1]}) scale(${scale})`);
+    //     states.transition().duration(750)
+    //       .style('opacity', s => (s === d ? 1 : 0.2))
+    //       .classed('zoomed', s => s === d);
+    //   }
+    // });
+
   // Add reset view button functionality
-  d3.select('#resetView').on('click', function() {
+  d3.select('#reset-map').on('click', function() {
     g.transition().duration(750).attr('transform', null);
     states.transition().duration(750).style('opacity', 1).classed('zoomed', false);
+    selectedState = null;
+    drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
+    drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
   });
 
   // Tooltip
@@ -262,14 +272,14 @@ async function drawFoodWasteMap2023() {
     .attr('text-anchor', 'start')
     .attr('font-size', 12)
     .attr('fill', '#444')
-    .text('Less wasted');
+    .text('Less');
   legendSvg.append('text')
     .attr('x', legendWidth)
     .attr('y', legendHeight + 22)
     .attr('text-anchor', 'end')
     .attr('font-size', 12)
     .attr('fill', '#444')
-    .text('More wasted');
+    .text('More');
 }
 
 function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preserveContent = false) {
@@ -658,8 +668,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initCausesEffectsSolutionsVisualizations();
 
   // Add this function to render the US-wide sub_sector bar chart
-  drawUSTotalBySubSector2023();
-  drawUSTotalByFoodType2023();
   drawFoodWasteBySubSectorBar({ year: 2023, state: '' });
   drawFoodWasteByFoodTypeBar({ year: 2023, state: '' });
 });
@@ -670,6 +678,7 @@ let currentTrashSummary = null;
 let isAnimating = false;
 let currentTrashAnimation = null; // Track current animation interval
 let currentSection = null; // Track current section (person vs household)
+let selectedState = null;
 
 // Function to update food visualization based on current step
 function updateFoodVisualization(period) {
@@ -1443,201 +1452,6 @@ function initCausesEffectsSolutionsVisualizations() {
 // top k sub-sectors/food types
 const k = 5;
 
-// Add this function to render the US-wide sub_sector bar chart
-function drawUSTotalBySubSector2023() {
-  d3.csv('data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
-  }).then(data => {
-    // Filter for 2023
-    const data2023 = data.filter(d => d.year === 2023);
-    // Group by sub_sector, using sector if sub_sector is 'Not Applicable'
-    const grouped = d3.rollups(
-      data2023,
-      v => d3.sum(v, d => d.tons_waste),
-      d => d.sub_sector === 'Not Applicable' ? d.sector : d.sub_sector
-    );
-    // Sort descending
-    grouped.sort((a, b) => b[1] - a[1]);
-    // Show only top k
-    const top5 = grouped.slice(0, k);
-    // Set up SVG
-    const container = d3.select('#d3-plot-top');
-    container.selectAll('*').remove();
-    const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
-    const svg = container.append('svg')
-      .attr('width', width)
-      .attr('height', height);
-    // Y scale (categories)
-    const y = d3.scaleBand()
-      .domain(top5.map(d => d[0]))
-      .range([margin.top, height - margin.bottom])
-      .padding(0.15);
-    // X scale (millions of tons)
-    const x = d3.scaleLinear()
-      .domain([0, d3.max(top5, d => d[1] / 1e6)])
-      .nice()
-      .range([margin.left, width - margin.right]);
-    // Tooltip div (one global for this chart)
-    let tooltip = d3.select('#d3-plot-top-tooltip');
-    if (tooltip.empty()) {
-      tooltip = d3.select('body').append('div')
-        .attr('id', 'd3-plot-top-tooltip')
-        .attr('class', 'tooltip')
-        .style('padding', '10px')
-        .style('min-width', '0px')
-        .style('position', 'absolute')
-        .style('display', 'none');
-    }
-    // Bars
-    svg.append('g')
-      .selectAll('rect')
-      .data(top5)
-      .join('rect')
-      .attr('x', x(0))
-      .attr('y', d => y(d[0]))
-      .attr('width', d => x(d[1] / 1e6) - x(0))
-      .attr('height', y.bandwidth())
-      .attr('fill', '#e67e22')
-      .on('mousemove', function(event, d) {
-        tooltip
-          .style('display', 'block')
-          .html(`<strong>${d[0]}</strong><br>${d3.format(',.2f')(d[1])} tons`)
-          .style('left', (event.pageX + 12) + 'px')
-          .style('top', (event.pageY - 24) + 'px');
-        d3.select(this).attr('fill', '#b35413');
-      })
-      .on('mouseleave', function() {
-        tooltip.style('display', 'none');
-        d3.select(this).attr('fill', '#e67e22');
-      });
-    // Y axis
-    svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
-      .selectAll('text')
-      .style('font-size', '13px');
-    // X axis (millions)
-    svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
-      .selectAll('text')
-      .style('font-size', '12px');
-    // X axis label
-    svg.append('text')
-      .attr('x', (width + margin.left) / 2)
-      .attr('y', height - 10)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '13px')
-      .text('Millions of Tons');
-    // Title
-    svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margin.top - 12)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '15px')
-      .attr('font-weight', 600)
-      .text('Top 5 Most Wasteful Sub-Sectors');
-  });
-}
-
-function drawUSTotalByFoodType2023() {
-  d3.csv('data/wastebyyear.csv', d => {
-    d.year = +d.year;
-    d.tons_waste = +d.tons_waste;
-    return d;
-  }).then(data => {
-    // Filter for 2023
-    const data2023 = data.filter(d => d.year === 2023);
-    // Group by food_type
-    const grouped = d3.rollups(
-      data2023,
-      v => d3.sum(v, d => d.tons_waste),
-      d => d.food_type
-    );
-    grouped.sort((a, b) => b[1] - a[1]);
-    const top5 = grouped.slice(0, k);
-    // Set up SVG
-    const container = d3.select('#d3-plot-bottom');
-    container.selectAll('*').remove();
-    const width = 360, height = 180, margin = {left: 120, right: 20, top: 28, bottom: 48};
-    const svg = container.append('svg')
-      .attr('width', width)
-      .attr('height', height);
-    // Y scale (categories)
-    const y = d3.scaleBand()
-      .domain(top5.map(d => d[0]))
-      .range([margin.top, height - margin.bottom])
-      .padding(0.15);
-    // X scale (millions of tons)
-    const x = d3.scaleLinear()
-      .domain([0, d3.max(top5, d => d[1] / 1e6)])
-      .nice()
-      .range([margin.left, width - margin.right]);
-    // Tooltip div (one global for this chart)
-    let tooltip = d3.select('#d3-plot-bottom-tooltip');
-    if (tooltip.empty()) {
-      tooltip = d3.select('body').append('div')
-        .attr('id', 'd3-plot-bottom-tooltip')
-        .attr('class', 'tooltip')
-        .style('padding', '10px')
-        .style('min-width', '0px')
-        .style('position', 'absolute')
-        .style('display', 'none');
-    }
-    // Bars
-    svg.append('g')
-      .selectAll('rect')
-      .data(top5)
-      .join('rect')
-      .attr('x', x(0))
-      .attr('y', d => y(d[0]))
-      .attr('width', d => x(d[1] / 1e6) - x(0))
-      .attr('height', y.bandwidth())
-      .attr('fill', '#3498db')
-      .on('mousemove', function(event, d) {
-        tooltip
-          .style('display', 'block')
-          .html(`<strong>${d[0]}</strong><br>${d3.format(',.2f')(d[1])} tons`)
-          .style('left', (event.pageX + 12) + 'px')
-          .style('top', (event.pageY - 24) + 'px');
-        d3.select(this).attr('fill', '#1d5e8a');
-      })
-      .on('mouseleave', function() {
-        tooltip.style('display', 'none');
-        d3.select(this).attr('fill', '#3498db');
-      });
-    // Y axis
-    svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
-      .selectAll('text')
-      .style('font-size', '13px');
-    // X axis (millions)
-    svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
-      .selectAll('text')
-      .style('font-size', '12px');
-    // X axis label
-    svg.append('text')
-      .attr('x', (width + margin.left) / 2)
-      .attr('y', height - 10)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '13px')
-      .text('Millions of Tons');
-    // Title (two lines)
-    svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margin.top - 12)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '15px')
-      .attr('font-weight', 600)
-      .text('Top 5 Most Wasted Food Types');
-  });
-}
-
 function drawFoodWasteBySubSectorBar({ year = 2023, state = '' } = {}) {
   d3.csv('data/wastebyyear.csv', d => {
     d.year = +d.year;
@@ -1685,13 +1499,13 @@ function drawFoodWasteBySubSectorBar({ year = 2023, state = '' } = {}) {
         .style('display', 'none');
     }
     // Bars
-    svg.append('g')
+    const bars = svg.append('g')
       .selectAll('rect')
       .data(top5)
       .join('rect')
       .attr('x', x(0))
       .attr('y', d => y(d[0]))
-      .attr('width', d => x(d[1] / 1e6) - x(0))
+      .attr('width', 0)
       .attr('height', y.bandwidth())
       .attr('fill', '#e67e22')
       .on('mousemove', function(event, d) {
@@ -1706,6 +1520,11 @@ function drawFoodWasteBySubSectorBar({ year = 2023, state = '' } = {}) {
         tooltip.style('display', 'none');
         d3.select(this).attr('fill', '#e67e22');
       });
+
+    bars.transition()
+      .duration(800)
+      .attr('width', d => x(d[1] / 1e6) - x(0));
+
     // Y axis
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
@@ -1725,14 +1544,24 @@ function drawFoodWasteBySubSectorBar({ year = 2023, state = '' } = {}) {
       .attr('text-anchor', 'middle')
       .attr('font-size', '13px')
       .text('Millions of Tons');
-    // Title (two lines)
-    svg.append('text')
+    
+    if (state) {
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', margin.top - 12)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '15px')
+        .attr('font-weight', 600)
+        .text(`Top 5 Most Wasteful Sub-Sectors (${state})`);
+    } else {
+      svg.append('text')
       .attr('x', width / 2)
       .attr('y', margin.top - 12)
       .attr('text-anchor', 'middle')
       .attr('font-size', '15px')
       .attr('font-weight', 600)
-      .text('Top 5 Most Wasteful Sub-Sectors');
+      .text('Top 5 Most Wasteful Sub-Sectors (US)');
+    }
   });
 }
 
@@ -1783,13 +1612,13 @@ function drawFoodWasteByFoodTypeBar({ year = 2023, state = '' } = {}) {
         .style('display', 'none');
     }
     // Bars
-    svg.append('g')
+    const bars = svg.append('g')
       .selectAll('rect')
       .data(top5)
       .join('rect')
       .attr('x', x(0))
       .attr('y', d => y(d[0]))
-      .attr('width', d => x(d[1] / 1e6) - x(0))
+      .attr('width', 0)
       .attr('height', y.bandwidth())
       .attr('fill', '#3498db')
       .on('mousemove', function(event, d) {
@@ -1804,6 +1633,11 @@ function drawFoodWasteByFoodTypeBar({ year = 2023, state = '' } = {}) {
         tooltip.style('display', 'none');
         d3.select(this).attr('fill', '#3498db');
       });
+
+    bars.transition()
+      .duration(800)
+      .attr('width', d => x(d[1] / 1e6) - x(0));
+
     // Y axis
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
@@ -1823,13 +1657,68 @@ function drawFoodWasteByFoodTypeBar({ year = 2023, state = '' } = {}) {
       .attr('text-anchor', 'middle')
       .attr('font-size', '13px')
       .text('Millions of Tons');
-    // Title (two lines)
+
+    if (state) {
     svg.append('text')
       .attr('x', width / 2)
       .attr('y', margin.top - 12)
       .attr('text-anchor', 'middle')
       .attr('font-size', '15px')
-      .attr('font-weight', 600)
-      .text('Top 5 Most Wasted Food Types');
+        .attr('font-weight', 600)
+        .text(`Top 5 Most Wasted Food Types (${state})`);
+    } else {
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', margin.top - 12)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '15px')
+        .attr('font-weight', 600)
+        .text('Top 5 Most Wasted Food Types (US)');
+    }
   });
 }
+
+// Improved scroll-triggered background color transition
+window.addEventListener('scroll', function() {
+  const bgTransStart = document.getElementById('country-subtext-1');
+  const bgTransEnd = document.getElementById('country-conclusion');
+  if (!bgTransStart || !bgTransEnd) return;
+  const start = bgTransStart.getBoundingClientRect();
+  const end = bgTransEnd.getBoundingClientRect();
+  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Calculate the scroll range for interpolation
+  const startY = start.bottom + window.scrollY; // When the bottom of subtext1 leaves the top of viewport
+  const endY = end.top + window.scrollY;      // When the top of map-container hits the top of viewport
+  const scrollY = window.scrollY;
+
+  // If before the range, keep white
+  if (scrollY < startY) {
+    document.body.style.transition = 'background 0.2s linear';
+    document.body.style.background = '#fff';
+    return;
+  }
+  // If after the range, keep blue
+  if (scrollY > endY) {
+    document.body.style.transition = 'background 0.2s linear';
+    document.body.style.background = '#7e99d9';
+    return;
+  }
+  // Interpolate color between white and #7e99d9
+  let progress = (scrollY - startY) / (endY - startY);
+  progress = Math.max(0, Math.min(1, progress));
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+    const num = parseInt(hex, 16);
+    return [num >> 16, (num >> 8) & 255, num & 255];
+  }
+  const rgb1 = [255, 255, 255];
+  const rgb2 = hexToRgb('7e99d9');
+  const r = Math.round(lerp(rgb1[0], rgb2[0], progress));
+  const g = Math.round(lerp(rgb1[1], rgb2[1], progress));
+  const b = Math.round(lerp(rgb1[2], rgb2[2], progress));
+  document.body.style.transition = 'background 0.2s linear';
+  document.body.style.background = `rgb(${r},${g},${b})`;
+});
