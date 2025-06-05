@@ -1546,164 +1546,103 @@ h2 {
 /* Visualization Container Styles */
 .visualization-container {
   width: 100%;
-  height: 300px;
-  margin: 30px 0;
-  background: rgba(255, 255, 255, 0.95);
+  height: 600px;  /* Increased from 400px to 600px */
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 20px 0;
   padding: 20px;
+  position: relative;
+}
+
+.fullscreen-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.fullscreen-button:hover {
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.fullscreen-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Fullscreen container styles */
+.visualization-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.visualization-fullscreen.active {
+  display: flex;
+}
+
+.fullscreen-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  width: 90%;
+  height: 90%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Update existing grid styles for better data presentation */
-.causes-grid,
-.effects-grid,
-.solutions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  margin: 30px 0;
-  padding: 0 20px;
-}
-
-.cause-item,
-.effect-item,
-.solution-item {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.cause-item:hover,
-.effect-item:hover,
-.solution-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.cause-icon,
-.effect-icon,
-.solution-icon {
-  font-size: 2.5em;
-  margin-bottom: 15px;
-}
-
-.cause-item h3,
-.effect-item h3,
-.solution-item h3 {
+.fullscreen-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
   color: #333;
-  font-size: 1.3em;
-  margin: 10px 0;
-  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.cause-item p,
-.effect-item p,
-.solution-item p {
-  color: #666;
-  font-size: 1em;
-  line-height: 1.5;
-  margin: 0;
+.fullscreen-close:hover {
+  transform: scale(1.1);
 }
 
-/* Update CTA container for better data visualization */
-.cta-container {
-  text-align: center;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  margin: 30px 0;
+.fullscreen-close svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
 }
 
-.cta-text {
-  font-size: 1.4em;
-  color: #333;
-  margin-bottom: 30px;
-  line-height: 1.6;
-}
-
-.cta-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  margin-top: 30px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stat-number {
-  font-size: 2.2em;
-  font-weight: 700;
-  color: #e74c3c;
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  font-size: 1em;
-  color: #666;
-  text-align: center;
-}
-
-/* Responsive Design Updates */
-@media (max-width: 1200px) {
-  .causes-grid,
-  .effects-grid,
-  .solutions-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  .visualization-container {
-    height: 250px;
-  }
-
-  .cta-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .causes-grid,
-  .effects-grid,
-  .solutions-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .visualization-container {
-    height: 200px;
-  }
-
-  .cta-stats {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .cause-item,
-  .effect-item,
-  .solution-item {
-    padding: 20px;
-  }
-
-  .cta-container {
-    padding: 25px;
-  }
-
-  .cta-text {
-    font-size: 1.2em;
-  }
-
-  .stat-number {
-    font-size: 1.8em;
-  }
+/* Ensure the visualization fills the fullscreen container */
+.visualization-fullscreen svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }

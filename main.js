@@ -1218,242 +1218,398 @@ function initSidebarMenu() {
 
 // Data visualization functions for causes, effects, and solutions section
 function initCausesEffectsSolutionsVisualizations() {
-  // Causes visualization - Pie chart showing distribution of food waste causes
-  function createCausesChart() {
-    const container = document.getElementById('waste-causes-chart');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const radius = Math.min(width, height) / 2 - 40;
+    // Initialize all visualizations
+    initCausesChart();
+    initEffectsChart();
+    initSolutionsChart();
+    initImpactChart();
+}
 
+function initCausesChart() {
+    const container = d3.select('#waste-causes-chart');
+    const width = container.node().getBoundingClientRect().width;
+    const height = 400;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
     const data = [
-      { label: 'Consumer Level', value: 43 },
-      { label: 'Date Label Confusion', value: 20 },
-      { label: 'Large Portions', value: 15 },
-      { label: 'Other', value: 22 }
+        { category: 'Consumer Level', value: 43, color: '#4CAF50' },
+        { category: 'Date Label Confusion', value: 20, color: '#2196F3' },
+        { category: 'Large Portions', value: 15, color: '#FFC107' },
+        { category: 'Storage Issues', value: 12, color: '#9C27B0' },
+        { category: 'Other', value: 10, color: '#FF5722' }
     ];
-
-    const svg = d3.select(container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', `translate(${width/2},${height/2})`);
-
-    const color = d3.scaleOrdinal()
-      .domain(data.map(d => d.label))
-      .range(['#e74c3c', '#3498db', '#2ecc71', '#f1c40f']);
-
-    const pie = d3.pie()
-      .value(d => d.value)
-      .sort(null);
-
+    
+    const radius = Math.min(width, height) / 2 - 40;
     const arc = d3.arc()
-      .innerRadius(0)
-      .outerRadius(radius);
-
-    const arcs = svg.selectAll('arc')
-      .data(pie(data))
-      .enter()
-      .append('g');
-
-    arcs.append('path')
-      .attr('d', arc)
-      .attr('fill', d => color(d.data.label))
-      .attr('stroke', 'white')
-      .style('stroke-width', '2px');
-
+        .innerRadius(radius * 0.6)
+        .outerRadius(radius);
+    
+    const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+    
+    const g = svg.append('g')
+        .attr('transform', `translate(${width/2}, ${height/2})`);
+    
+    // Add title
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 30)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '20px')
+        .style('font-weight', 'bold')
+        .text('Causes of Food Waste');
+    
+    // Create pie chart segments
+    const path = g.selectAll('path')
+        .data(pie(data))
+        .enter()
+        .append('path')
+        .attr('d', arc)
+        .attr('fill', d => d.data.color)
+        .attr('stroke', 'white')
+        .style('stroke-width', '2px')
+        .style('opacity', 0)
+        .transition()
+        .duration(1000)
+        .style('opacity', 0.8);
+    
     // Add labels
     const labelArc = d3.arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius * 0.6);
+        .innerRadius(radius * 0.8)
+        .outerRadius(radius * 0.8);
+    
+    g.selectAll('text')
+        .data(pie(data))
+        .enter()
+        .append('text')
+        .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+        .attr('dy', '0.35em')
+        .style('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('opacity', 0)
+        .text(d => `${d.data.category}: ${d.data.value}%`)
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
+    
+    // Add hover effects
+    path.on('mouseover', function(event, d) {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .style('opacity', 1);
+    })
+    .on('mouseout', function() {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .style('opacity', 0.8);
+    });
+}
 
-    arcs.append('text')
-      .attr('transform', d => `translate(${labelArc.centroid(d)})`)
-      .attr('dy', '.35em')
-      .text(d => `${d.data.label} (${d.data.value}%)`)
-      .style('text-anchor', 'middle')
-      .style('font-size', '12px')
-      .style('fill', 'white');
-  }
-
-  // Effects visualization - Bar chart showing environmental impacts
-  function createEffectsChart() {
-    const container = document.getElementById('waste-effects-chart');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-
+function initEffectsChart() {
+    const container = d3.select('#waste-effects-chart');
+    const width = container.node().getBoundingClientRect().width;
+    const height = 400;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
     const data = [
-      { impact: 'Greenhouse Gases', value: 8 },
-      { impact: 'Water Waste', value: 21 },
-      { impact: 'Land Use', value: 28 }
+        { category: 'Greenhouse Gases', value: 8, unit: '%' },
+        { category: 'Water Waste', value: 21, unit: '%' },
+        { category: 'Land Use', value: 28, unit: '%' },
+        { category: 'Energy Waste', value: 15, unit: '%' }
     ];
-
-    const svg = d3.select(container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
-
+    
+    const margin = { top: 60, right: 20, bottom: 60, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    
+    // Create scales
     const x = d3.scaleBand()
-      .domain(data.map(d => d.impact))
-      .range([margin.left, width - margin.right])
-      .padding(0.1);
-
+        .domain(data.map(d => d.category))
+        .range([0, innerWidth])
+        .padding(0.3);
+    
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value)])
-      .range([height - margin.bottom, margin.top]);
-
+        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .range([innerHeight, 0]);
+    
+    // Create axes
+    const xAxis = d3.axisBottom(x)
+        .tickSize(0);
+    
+    const yAxis = d3.axisLeft(y)
+        .ticks(5)
+        .tickFormat(d => d + '%');
+    
+    // Add axes
     svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x))
-      .selectAll('text')
-      .attr('transform', 'rotate(-45)')
-      .style('text-anchor', 'end');
-
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis)
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .style('font-size', '12px');
+    
     svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(null, 's'));
-
-    svg.selectAll('rect')
-      .data(data)
-      .enter()
-      .append('rect')
-      .attr('x', d => x(d.impact))
-      .attr('y', d => y(d.value))
-      .attr('width', x.bandwidth())
-      .attr('height', d => height - margin.bottom - y(d.value))
-      .attr('fill', '#e74c3c');
-
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis);
+    
+    // Add title
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', margin.top/2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '20px')
+        .style('font-weight', 'bold')
+        .text('Environmental Impact of Food Waste');
+    
+    // Add bars with animation
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('rect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', d => x(d.category))
+        .attr('y', innerHeight)
+        .attr('width', x.bandwidth())
+        .attr('height', 0)
+        .attr('fill', '#4CAF50')
+        .attr('opacity', 0.8)
+        .transition()
+        .duration(1000)
+        .attr('y', d => y(d.value))
+        .attr('height', d => innerHeight - y(d.value));
+    
     // Add value labels
-    svg.selectAll('text.value')
-      .data(data)
-      .enter()
-      .append('text')
-      .attr('class', 'value')
-      .attr('x', d => x(d.impact) + x.bandwidth() / 2)
-      .attr('y', d => y(d.value) - 5)
-      .attr('text-anchor', 'middle')
-      .text(d => `${d.value}%`);
-  }
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('text')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('x', d => x(d.category) + x.bandwidth() / 2)
+        .attr('y', d => y(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .style('opacity', 0)
+        .text(d => d.value + d.unit)
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
+}
 
-  // Solutions visualization - Line chart showing impact of solutions over time
-  function createSolutionsChart() {
-    const container = document.getElementById('waste-solutions-chart');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-
+function initSolutionsChart() {
+    const container = d3.select('#waste-solutions-chart');
+    const width = container.node().getBoundingClientRect().width;
+    const height = 400;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
     const data = [
-      { month: 0, reduction: 0 },
-      { month: 1, reduction: 10 },
-      { month: 2, reduction: 20 },
-      { month: 3, reduction: 30 }
+        { month: 'Jan', reduction: 5 },
+        { month: 'Feb', reduction: 8 },
+        { month: 'Mar', reduction: 12 },
+        { month: 'Apr', reduction: 15 },
+        { month: 'May', reduction: 18 },
+        { month: 'Jun', reduction: 22 },
+        { month: 'Jul', reduction: 25 },
+        { month: 'Aug', reduction: 28 },
+        { month: 'Sep', reduction: 30 },
+        { month: 'Oct', reduction: 32 },
+        { month: 'Nov', reduction: 35 },
+        { month: 'Dec', reduction: 38 }
     ];
-
-    const svg = d3.select(container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
-
-    const x = d3.scaleLinear()
-      .domain([0, 3])
-      .range([margin.left, width - margin.right]);
-
+    
+    const margin = { top: 60, right: 20, bottom: 40, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    
+    // Create scales
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.month))
+        .range([0, innerWidth])
+        .padding(0.1);
+    
     const y = d3.scaleLinear()
-      .domain([0, 30])
-      .range([height - margin.bottom, margin.top]);
-
+        .domain([0, d3.max(data, d => d.reduction) * 1.1])
+        .range([innerHeight, 0]);
+    
+    // Create axes
+    const xAxis = d3.axisBottom(x);
+    const yAxis = d3.axisLeft(y)
+        .ticks(5)
+        .tickFormat(d => d + '%');
+    
+    // Add axes
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis);
+    
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis);
+    
+    // Add title
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', margin.top/2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '20px')
+        .style('font-weight', 'bold')
+        .text('Monthly Waste Reduction Progress');
+    
+    // Create line
     const line = d3.line()
-      .x(d => x(d.month))
-      .y(d => y(d.reduction));
-
-    svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(4).tickFormat(d => `Month ${d}`));
-
-    svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(null, 's'));
-
+        .x(d => x(d.month) + x.bandwidth() / 2)
+        .y(d => y(d.reduction))
+        .curve(d3.curveMonotoneX);
+    
+    // Add line with animation
     svg.append('path')
-      .datum(data)
-      .attr('fill', 'none')
-      .attr('stroke', '#2ecc71')
-      .attr('stroke-width', 2)
-      .attr('d', line);
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', '#4CAF50')
+        .attr('stroke-width', 3)
+        .attr('d', line)
+        .style('opacity', 0)
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
+    
+    // Add dots with animation
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('circle')
+        .data(data)
+        .enter()
+        .append('circle')
+        .attr('cx', d => x(d.month) + x.bandwidth() / 2)
+        .attr('cy', innerHeight)
+        .attr('r', 5)
+        .attr('fill', '#4CAF50')
+        .transition()
+        .duration(1000)
+        .attr('cy', d => y(d.reduction));
+    
+    // Add value labels
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('text')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('x', d => x(d.month) + x.bandwidth() / 2)
+        .attr('y', d => y(d.reduction) - 10)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .style('opacity', 0)
+        .text(d => d.reduction + '%')
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
+}
 
-    // Add dots
-    svg.selectAll('circle')
-      .data(data)
-      .enter()
-      .append('circle')
-      .attr('cx', d => x(d.month))
-      .attr('cy', d => y(d.reduction))
-      .attr('r', 4)
-      .attr('fill', '#2ecc71');
-  }
-
-  // Impact visualization - Stacked area chart showing cumulative impact
-  function createImpactChart() {
-    const container = document.getElementById('waste-impact-chart');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-
+function initImpactChart() {
+    const container = d3.select('#waste-impact-chart');
+    const width = container.node().getBoundingClientRect().width;
+    const height = 400;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
     const data = [
-      { month: 0, environmental: 0, economic: 0, social: 0 },
-      { month: 1, environmental: 10, economic: 5, social: 8 },
-      { month: 2, environmental: 20, economic: 15, social: 18 },
-      { month: 3, environmental: 30, economic: 25, social: 28 }
+        { category: 'Production', value: 40, color: '#4CAF50' },
+        { category: 'Transportation', value: 25, color: '#2196F3' },
+        { category: 'Storage', value: 20, color: '#FFC107' },
+        { category: 'Disposal', value: 15, color: '#FF5722' }
     ];
-
-    const svg = d3.select(container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
-
-    const x = d3.scaleLinear()
-      .domain([0, 3])
-      .range([margin.left, width - margin.right]);
-
+    
+    const margin = { top: 60, right: 20, bottom: 40, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    
+    // Create scales
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, innerWidth])
+        .padding(0.3);
+    
     const y = d3.scaleLinear()
-      .domain([0, 100])
-      .range([height - margin.bottom, margin.top]);
-
-    const area = d3.area()
-      .x(d => x(d.month))
-      .y0(d => y(d.environmental))
-      .y1(d => y(d.environmental + d.economic + d.social));
-
+        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .range([innerHeight, 0]);
+    
+    // Create axes
+    const xAxis = d3.axisBottom(x);
+    const yAxis = d3.axisLeft(y)
+        .ticks(5)
+        .tickFormat(d => d + '%');
+    
+    // Add axes
     svg.append('g')
-      .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(4).tickFormat(d => `Month ${d}`));
-
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis);
+    
     svg.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(null, 's'));
-
-    svg.append('path')
-      .datum(data)
-      .attr('fill', '#3498db')
-      .attr('opacity', 0.6)
-      .attr('d', area);
-  }
-
-  // Initialize all visualizations
-  createCausesChart();
-  createEffectsChart();
-  createSolutionsChart();
-  createImpactChart();
-
-  // Add window resize handler
-  window.addEventListener('resize', () => {
-    d3.selectAll('#waste-causes-chart svg, #waste-effects-chart svg, #waste-solutions-chart svg, #waste-impact-chart svg').remove();
-    createCausesChart();
-    createEffectsChart();
-    createSolutionsChart();
-    createImpactChart();
-  });
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis);
+    
+    // Add title
+    svg.append('text')
+        .attr('x', width/2)
+        .attr('y', margin.top/2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '20px')
+        .style('font-weight', 'bold')
+        .text('Economic Impact of Food Waste');
+    
+    // Add bars with animation
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('rect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', d => x(d.category))
+        .attr('y', innerHeight)
+        .attr('width', x.bandwidth())
+        .attr('height', 0)
+        .attr('fill', d => d.color)
+        .attr('opacity', 0.8)
+        .transition()
+        .duration(1000)
+        .attr('y', d => y(d.value))
+        .attr('height', d => innerHeight - y(d.value));
+    
+    // Add value labels
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('text')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('x', d => x(d.category) + x.bandwidth() / 2)
+        .attr('y', d => y(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .style('opacity', 0)
+        .text(d => d.value + '%')
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
 }
 
 // top k sub-sectors/food types
@@ -1740,4 +1896,194 @@ window.addEventListener('scroll', function() {
 
 // Performance improvement: operation cancellation system
 let currentOperationId = 0;
+
+// Fullscreen functionality
+function toggleFullscreen(type) {
+    const fullscreenContainer = document.getElementById(`${type}-fullscreen`);
+    const chartContainer = document.getElementById(`waste-${type}-chart`);
+    const fullscreenChart = document.getElementById(`${type}-fullscreen-chart`);
+    
+    if (fullscreenContainer.style.display === 'flex') {
+        // Exit fullscreen
+        fullscreenContainer.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    } else {
+        // Enter fullscreen
+        fullscreenContainer.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Clone the visualization to the fullscreen container
+        const originalChart = chartContainer.querySelector('svg');
+        if (originalChart) {
+            const clonedChart = originalChart.cloneNode(true);
+            fullscreenChart.innerHTML = '';
+            fullscreenChart.appendChild(clonedChart);
+            
+            // Resize the chart to fit the fullscreen container
+            const width = fullscreenChart.clientWidth;
+            const height = fullscreenChart.clientHeight;
+            
+            // Update the chart dimensions
+            clonedChart.setAttribute('width', width);
+            clonedChart.setAttribute('height', height);
+            
+            // Reinitialize the visualization with new dimensions
+            switch(type) {
+                case 'causes':
+                    initCausesChart(clonedChart, width, height);
+                    break;
+                case 'effects':
+                    initEffectsChart(clonedChart, width, height);
+                    break;
+                case 'solutions':
+                    initSolutionsChart(clonedChart, width, height);
+                    break;
+                case 'impact':
+                    initImpactChart(clonedChart, width, height);
+                    break;
+            }
+        }
+    }
+}
+
+// Add resize handler for fullscreen visualizations
+window.addEventListener('resize', () => {
+    const fullscreenContainers = document.querySelectorAll('.visualization-fullscreen');
+    fullscreenContainers.forEach(container => {
+        if (container.style.display === 'flex') {
+            const type = container.id.split('-')[0];
+            const chart = container.querySelector('svg');
+            if (chart) {
+                const width = container.querySelector('.fullscreen-content').clientWidth;
+                const height = container.querySelector('.fullscreen-content').clientHeight;
+                
+                chart.setAttribute('width', width);
+                chart.setAttribute('height', height);
+                
+                // Reinitialize the visualization with new dimensions
+                switch(type) {
+                    case 'causes':
+                        initCausesChart(chart, width, height);
+                        break;
+                    case 'effects':
+                        initEffectsChart(chart, width, height);
+                        break;
+                    case 'solutions':
+                        initSolutionsChart(chart, width, height);
+                        break;
+                    case 'impact':
+                        initImpactChart(chart, width, height);
+                        break;
+                }
+            }
+        }
+    });
+});
+
+// Add escape key handler for fullscreen
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const fullscreenContainers = document.querySelectorAll('.visualization-fullscreen');
+        fullscreenContainers.forEach(container => {
+            if (container.style.display === 'flex') {
+                container.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+    }
+});
+
+// Remove all fullscreen-related code and update the effects chart
+function initEffectsChart(svg, width, height) {
+    const data = [
+        { category: 'Greenhouse Gases', value: 8, unit: '%' },
+        { category: 'Water Waste', value: 21, unit: '%' },
+        { category: 'Land Use', value: 28, unit: '%' },
+        { category: 'Energy Waste', value: 15, unit: '%' }
+    ];
+
+    const margin = { top: 40, right: 20, bottom: 60, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    // Clear any existing content
+    svg.selectAll('*').remove();
+
+    // Create scales
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, innerWidth])
+        .padding(0.3);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .range([innerHeight, 0]);
+
+    // Create axes
+    const xAxis = d3.axisBottom(x)
+        .tickSize(0);
+
+    const yAxis = d3.axisLeft(y)
+        .ticks(5)
+        .tickFormat(d => d + '%');
+
+    // Add axes
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top + innerHeight})`)
+        .call(xAxis)
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .style('font-size', '12px');
+
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis);
+
+    // Add bars
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('rect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', d => x(d.category))
+        .attr('y', d => y(d.value))
+        .attr('width', x.bandwidth())
+        .attr('height', d => innerHeight - y(d.value))
+        .attr('fill', '#4CAF50')
+        .attr('opacity', 0.8)
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .attr('opacity', 1);
+        })
+        .on('mouseout', function() {
+            d3.select(this)
+                .attr('opacity', 0.8);
+        });
+
+    // Add value labels
+    svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .selectAll('text')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('x', d => x(d.category) + x.bandwidth() / 2)
+        .attr('y', d => y(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .text(d => d.value + d.unit);
+
+    // Add title
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', margin.top / 2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '16px')
+        .style('font-weight', 'bold')
+        .text('Environmental Impact of Food Waste');
+}
 
