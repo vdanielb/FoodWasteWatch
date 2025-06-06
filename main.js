@@ -639,7 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
       householdYear: r(perHouseholdYear),
       cityYear: Math.round(perCityYear / 1000000), // Convert to millions
       stateYear: Math.round(perStateYear / 1000000000), // Convert to billions
-      countryYear: Math.round(perCountryYear / 1000000000) // Convert to billions
+      countryYear: 126 // Fixed to correct 126 billion pounds
     };
     
     // Populate the text boxes with calculated values
@@ -1313,7 +1313,7 @@ function initCausesChart() {
     const paths = arcs.append('path')
         .attr('d', arc)
         .attr('fill', d => d.data.color)
-        .attr('stroke', 'white')
+        .attr('stroke', '#333')
         .style('stroke-width', '2px')
         .style('opacity', 0.85)
         .style('cursor', 'pointer')
@@ -1875,7 +1875,7 @@ function initSolutionsChart() {
             .attr('cy', d => y(d))
             .attr('r', 6)
             .attr('fill', scenario.color)
-            .attr('stroke', 'white')
+            .attr('stroke', '#333')
             .attr('stroke-width', 2)
             .style('cursor', 'pointer')
             .style('opacity', 0)
@@ -1942,7 +1942,7 @@ function initSolutionsChart() {
             .attr('cy', 0)
             .attr('r', 4)
             .attr('fill', scenario.color)
-            .attr('stroke', 'white')
+            .attr('stroke', '#333')
             .attr('stroke-width', 1);
         
         // Legend text

@@ -301,7 +301,7 @@ h2 {
 
 
 .map-container {
-  background-color: #f5f7fa;
+  background-color: white;
   border-radius: 10px 10px 0 0;
   margin: 0;
   position: relative;
@@ -1899,11 +1899,11 @@ h2 {
 
 /* Dashboard Styles */
 .stats-dashboard {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: white;
   padding: 60px 40px;
   margin: 0;
   min-height: 100vh;
-  color: white;
+  color: black;
 }
 
 .dashboard-header {
@@ -1915,10 +1915,7 @@ h2 {
   font-size: 3.2rem;
   font-weight: 700;
   margin-bottom: 16px;
-  background: linear-gradient(45deg, #fff, #e0e7ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 .dashboard-subtitle {
@@ -1984,10 +1981,7 @@ h2 {
   line-height: 1;
   margin-bottom: 8px;
   display: block;
-  background: linear-gradient(45deg, #fff, #f8fafc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 .stat-unit {
@@ -2022,10 +2016,7 @@ h2 {
   font-weight: 700;
   text-align: center;
   margin-bottom: 40px;
-  background: linear-gradient(45deg, #fff, #e0e7ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 .impact-grid {
@@ -2182,10 +2173,10 @@ h2 {
 
 /* Insights Section Styles */
 .insights-section {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: white;
   padding: 80px 40px;
   margin: 0;
-  color: white;
+  color: black;
 }
 
 .insights-container {
@@ -2202,10 +2193,7 @@ h2 {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 16px;
-  background: linear-gradient(45deg, #fff, #fef3c7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 .insights-subtitle {
@@ -2224,11 +2212,11 @@ h2 {
 }
 
 .insight-panel {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(240, 248, 255, 0.8);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 35px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
@@ -2242,10 +2230,7 @@ h2 {
   font-weight: 700;
   margin-bottom: 25px;
   text-align: center;
-  background: linear-gradient(45deg, #fff, #fbbf24);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 /* Preview Items */
@@ -2259,13 +2244,13 @@ h2 {
   gap: 15px;
   margin-bottom: 15px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 10px;
   transition: all 0.2s ease;
 }
 
 .cause-item:hover, .effect-item:hover, .solution-item:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(220, 235, 250, 0.9);
   transform: translateX(5px);
 }
 
@@ -2297,7 +2282,7 @@ h2 {
   align-items: center;
   margin-bottom: 20px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
   text-align: center;
 }
@@ -2318,11 +2303,11 @@ h2 {
 
 /* Chart Containers */
 .chart-container {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(240, 248, 255, 0.9);
   border-radius: 12px;
   padding: 20px;
   min-height: 300px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Panel-specific styling */
@@ -2373,10 +2358,10 @@ h2 {
 
 /* Project Writeup Section */
 .project-writeup {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: white;
   padding: 80px 40px;
   margin: 0;
-  color: white;
+  color: black;
 }
 
 .writeup-container {
@@ -2393,10 +2378,7 @@ h2 {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 16px;
-  background: linear-gradient(45deg, #fff, #e0f2fe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 .writeup-subtitle {
@@ -2415,11 +2397,11 @@ h2 {
 }
 
 .writeup-panel {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(240, 248, 255, 0.8);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 35px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   position: relative;
 }
@@ -2441,10 +2423,7 @@ h2 {
   font-weight: 700;
   margin-bottom: 25px;
   text-align: center;
-  background: linear-gradient(45deg, #fff, #e0f2fe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: black;
 }
 
 /* Accomplishments Panel */
@@ -2459,13 +2438,13 @@ h2 {
   align-items: flex-start;
   gap: 15px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .accomplishment-item:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(220, 235, 250, 0.9);
   transform: translateX(5px);
 }
 
@@ -2479,7 +2458,7 @@ h2 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 6px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .accomplishment-content p {
@@ -2500,13 +2479,13 @@ h2 {
   align-items: flex-start;
   gap: 15px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .challenge-item:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(220, 235, 250, 0.9);
   transform: translateX(5px);
 }
 
@@ -2540,7 +2519,7 @@ h2 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 6px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .challenge-content p {
@@ -2557,7 +2536,7 @@ h2 {
 }
 
 .tech-category {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
   padding: 20px;
 }
@@ -2566,7 +2545,7 @@ h2 {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 15px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .tech-items {
@@ -2576,7 +2555,7 @@ h2 {
 }
 
 .tech-item {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(200, 220, 240, 0.8);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -2585,13 +2564,13 @@ h2 {
 }
 
 .tech-item:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(180, 210, 240, 1);
   transform: scale(1.05);
 }
 
 /* Data Panel */
 .data-source-primary {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 25px;
@@ -2601,7 +2580,7 @@ h2 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 15px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .data-details {
@@ -2634,7 +2613,7 @@ h2 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 20px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .methodology-steps {
@@ -2648,7 +2627,7 @@ h2 {
   align-items: flex-start;
   gap: 15px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(230, 240, 250, 0.7);
   border-radius: 12px;
 }
 
@@ -2670,7 +2649,7 @@ h2 {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 6px;
-  color: #e0f2fe;
+  color: #1e40af;
 }
 
 .step-content p {
