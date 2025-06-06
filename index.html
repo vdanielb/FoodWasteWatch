@@ -193,243 +193,246 @@
   <div style="background-color: white;">
 
   <!-- Key Statistics Dashboard -->
-  <section class="stats-dashboard">
-    <div class="dashboard-header">
-      <h1>Food Waste in America: The Numbers</h1>
-      <p class="dashboard-subtitle">A comprehensive look at the scale and impact of food waste in the United States</p>
-    </div>
-    
-    <!-- Core Statistics Grid -->
-    <div class="stats-grid">
-      <div class="stat-card primary" data-stat="tonnage">
-        <div class="stat-icon">🗑️</div>
-        <div class="stat-content">
-          <h3>Annual Food Waste</h3>
-          <div class="stat-number" id="stat-tons-dash">75M</div>
-          <div class="stat-unit">tons per year</div>
-          <p class="stat-description">40% of all food produced ends up in landfills</p>
-        </div>
-        <div class="stat-animation" id="waste-animation-1-dash"></div>
+  <div class="reveal-section" id="reveal-stats">
+    <section class="stats-dashboard">
+      <div class="dashboard-header">
+        <h1>Food Waste in America: The Numbers</h1>
+        <p class="dashboard-subtitle">A comprehensive look at the scale and impact of food waste in the United States</p>
       </div>
       
-      <div class="stat-card economic" data-stat="economic">
-        <div class="stat-icon">💰</div>
-        <div class="stat-content">
-          <h3>Economic Impact</h3>
-          <div class="stat-number" id="stat-value-dash">$440B</div>
-          <div class="stat-unit">lost annually</div>
-          <p class="stat-description">$1,400 wasted per household each year</p>
+      <!-- Core Statistics Grid -->
+      <div class="stats-grid">
+        <div class="stat-card primary reveal-stagger" data-stat="tonnage">
+          <div class="stat-icon">🗑️</div>
+          <div class="stat-content">
+            <h3>Annual Food Waste</h3>
+            <div class="stat-number" id="stat-tons-dash">75M</div>
+            <div class="stat-unit">tons per year</div>
+            <p class="stat-description">40% of all food produced ends up in landfills</p>
+          </div>
+          <div class="stat-animation" id="waste-animation-1-dash"></div>
         </div>
-        <div class="stat-animation" id="waste-animation-3-dash"></div>
+        
+        <div class="stat-card economic reveal-stagger" data-stat="economic">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <h3>Economic Impact</h3>
+            <div class="stat-number" id="stat-value-dash">$440B</div>
+            <div class="stat-unit">lost annually</div>
+            <p class="stat-description">$1,400 wasted per household each year</p>
+          </div>
+          <div class="stat-animation" id="waste-animation-3-dash"></div>
+        </div>
+        
+        <div class="stat-card comparison reveal-stagger" data-stat="comparison">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-content">
+            <h3>Scale Comparison</h3>
+            <div class="stat-number" id="stat-esb-dash">450x</div>
+            <div class="stat-unit">Empire State Buildings</div>
+            <p class="stat-description">If stacked, wasted food would fill this iconic tower 450 times</p>
+          </div>
+          <div class="stat-animation" id="waste-animation-2-dash"></div>
+        </div>
       </div>
       
-      <div class="stat-card comparison" data-stat="comparison">
-        <div class="stat-icon">🏢</div>
-        <div class="stat-content">
-          <h3>Scale Comparison</h3>
-          <div class="stat-number" id="stat-esb-dash">450x</div>
-          <div class="stat-unit">Empire State Buildings</div>
-          <p class="stat-description">If stacked, wasted food would fill this iconic tower 450 times</p>
-        </div>
-        <div class="stat-animation" id="waste-animation-2-dash"></div>
-      </div>
-    </div>
-    
-    <!-- Environmental Impact Row -->
-    <div class="impact-section">
-      <h2 class="section-title">Environmental Consequences</h2>
-      <div class="impact-grid">
-        <div class="impact-card climate" data-impact="climate">
-          <div class="impact-visual" id="climate-visual"></div>
-          <div class="impact-details">
-            <h4>🚗 Climate Impact</h4>
-            <div class="impact-stat">58M cars equivalent</div>
-            <p>CO₂ emissions from rotting food equal the carbon footprint of every car in Texas and California combined</p>
+      <!-- Environmental Impact Row -->
+      <div class="impact-section reveal-stagger">
+        <h2 class="section-title">Environmental Consequences</h2>
+        <div class="impact-grid">
+          <div class="impact-card climate reveal-stagger" data-impact="climate">
+            <div class="impact-visual" id="climate-visual"></div>
+            <div class="impact-details">
+              <h4>🚗 Climate Impact</h4>
+              <div class="impact-stat">58M cars equivalent</div>
+              <p>CO₂ emissions from rotting food equal the carbon footprint of every car in Texas and California combined</p>
+            </div>
           </div>
-        </div>
-        
-        <div class="impact-card water" data-impact="water">
-          <div class="impact-visual" id="water-visual"></div>
-          <div class="impact-details">
-            <h4>🌊 Water Waste</h4>
-            <div class="impact-stat">21 trillion gallons</div>
-            <p>Enough to fill 2.3 million Olympic swimming pools - wasted on food that's never eaten</p>
+          
+          <div class="impact-card water reveal-stagger" data-impact="water">
+            <div class="impact-visual" id="water-visual"></div>
+            <div class="impact-details">
+              <h4>🌊 Water Waste</h4>
+              <div class="impact-stat">21 trillion gallons</div>
+              <p>Enough to fill 2.3 million Olympic swimming pools - wasted on food that's never eaten</p>
+            </div>
           </div>
-        </div>
-        
-        <div class="impact-card land" data-impact="land">
-          <div class="impact-visual" id="land-visual"></div>
-          <div class="impact-details">
-            <h4>🚜 Land Usage</h4>
-            <div class="impact-stat">56M acres</div>
-            <p>Agricultural land larger than Wisconsin dedicated to growing food that gets thrown away</p>
+          
+          <div class="impact-card land reveal-stagger" data-impact="land">
+            <div class="impact-visual" id="land-visual"></div>
+            <div class="impact-details">
+              <h4>🚜 Land Usage</h4>
+              <div class="impact-stat">56M acres</div>
+              <p>Agricultural land larger than Wisconsin dedicated to growing food that gets thrown away</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Solutions Row -->
-    <div class="solutions-section">
-      <h2 class="section-title">Potential for Change</h2>
-      <div class="solutions-grid">
-        <div class="solution-card positive" data-solution="hunger">
-          <div class="solution-icon">🍽️</div>
-          <div class="solution-content">
-            <h4>Fight Hunger</h4>
-            <div class="solution-stat">13M Americans</div>
-            <p>could be fed by rescuing just 10% of wasted food</p>
+      
+      <!-- Solutions Row -->
+      <div class="solutions-section reveal-stagger">
+        <h2 class="section-title">Potential for Change</h2>
+        <div class="solutions-grid">
+          <div class="solution-card positive reveal-stagger" data-solution="hunger">
+            <div class="solution-icon">🍽️</div>
+            <div class="solution-content">
+              <h4>Fight Hunger</h4>
+              <div class="solution-stat">13M Americans</div>
+              <p>could be fed by rescuing just 10% of wasted food</p>
+            </div>
           </div>
-        </div>
-        
-        <div class="solution-card savings" data-solution="savings">
-          <div class="solution-icon">💵</div>
-          <div class="solution-content">
-            <h4>Personal Savings</h4>
-            <div class="solution-stat">$700/year</div>
-            <p>potential savings per household with better food management</p>
+          
+          <div class="solution-card savings reveal-stagger" data-solution="savings">
+            <div class="solution-icon">💵</div>
+            <div class="solution-content">
+              <h4>Personal Savings</h4>
+              <div class="solution-stat">$700/year</div>
+              <p>potential savings per household with better food management</p>
+            </div>
           </div>
-        </div>
-        
-        <div class="solution-card jobs" data-solution="jobs">
-          <div class="solution-icon">👥</div>
-          <div class="solution-content">
-            <h4>Job Creation</h4>
-            <div class="solution-stat">51K jobs</div>
-            <p>could be created through food recovery programs</p>
+          
+          <div class="solution-card jobs reveal-stagger" data-solution="jobs">
+            <div class="solution-icon">👥</div>
+            <div class="solution-content">
+              <h4>Job Creation</h4>
+              <div class="solution-stat">51K jobs</div>
+              <p>could be created through food recovery programs</p>
+            </div>
           </div>
-        </div>
-        
-        <div class="solution-card environment" data-solution="methane">
-          <div class="solution-icon">♻️</div>
-          <div class="solution-content">
-            <h4>Methane Reduction</h4>
-            <div class="solution-stat">34% decrease</div>
-            <p>in methane emissions through composting instead of landfilling</p>
+          
+          <div class="solution-card environment reveal-stagger" data-solution="methane">
+            <div class="solution-icon">♻️</div>
+            <div class="solution-content">
+              <h4>Methane Reduction</h4>
+              <div class="solution-stat">34% decrease</div>
+              <p>in methane emissions through composting instead of landfilling</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-
-  <!-- Causes, Effects, and Solutions Section -->
-  <section class="insights-section">
-    <div class="insights-container">
-      <div class="insights-header">
-        <h1>Understanding Food Waste: Causes, Effects & Solutions</h1>
-        <p class="insights-subtitle">Explore the comprehensive analysis of America's food waste crisis</p>
-      </div>
-      
-      <!-- Causes and Effects Row -->
-      <div class="insights-row">
-        <div class="insight-panel causes-panel">
-          <h2>Why Does Food Waste Happen?</h2>
-          <div class="causes-preview">
-            <div class="cause-item">
-              <span class="cause-icon">🛒</span>
-              <div>
-                <h4>Overbuying</h4>
-                <p>43% due to impulse purchases</p>
-              </div>
-            </div>
-            <div class="cause-item">
-              <span class="cause-icon">📅</span>
-              <div>
-                <h4>Date Confusion</h4>
-                <p>20% from expiration labels</p>
-              </div>
-            </div>
-            <div class="cause-item">
-              <span class="cause-icon">🍽️</span>
-              <div>
-                <h4>Large Portions</h4>
-                <p>2-8x recommended sizes</p>
-              </div>
-            </div>
-          </div>
-          <div class="chart-container" id="waste-causes-chart"></div>
+  <!-- Insights/Writeup Section -->
+  <div class="reveal-section" id="reveal-insights">
+    <section class="insights-section">
+      <div class="insights-container">
+        <div class="insights-header">
+          <h1>Understanding Food Waste: Causes, Effects & Solutions</h1>
+          <p class="insights-subtitle">Explore the comprehensive analysis of America's food waste crisis</p>
         </div>
         
-        <div class="insight-panel effects-panel">
-          <h2>Environmental Impact</h2>
-          <div class="effects-preview">
-            <div class="effect-item">
-              <span class="effect-icon">🚗</span>
-              <div>
-                <h4>Climate Impact</h4>
-                <p>8% of global emissions</p>
+        <!-- Show each panel one by one -->
+        <div class="reveal-section">
+          <div class="insight-panel causes-panel reveal-stagger">
+            <h2>Why Does Food Waste Happen?</h2>
+            <div class="causes-preview">
+              <div class="cause-item reveal-stagger">
+                <span class="cause-icon">🛒</span>
+                <div>
+                  <h4>Overbuying</h4>
+                  <p>43% due to impulse purchases</p>
+                </div>
+              </div>
+              <div class="cause-item reveal-stagger">
+                <span class="cause-icon">📅</span>
+                <div>
+                  <h4>Date Confusion</h4>
+                  <p>20% from expiration labels</p>
+                </div>
+              </div>
+              <div class="cause-item reveal-stagger">
+                <span class="cause-icon">🍽️</span>
+                <div>
+                  <h4>Large Portions</h4>
+                  <p>2-8x recommended sizes</p>
+                </div>
               </div>
             </div>
-            <div class="effect-item">
-              <span class="effect-icon">🌊</span>
-              <div>
-                <h4>Water Waste</h4>
-                <p>21% of freshwater wasted</p>
-              </div>
-            </div>
-            <div class="effect-item">
-              <span class="effect-icon">🚜</span>
-              <div>
-                <h4>Land Misuse</h4>
-                <p>28% of farmland</p>
-              </div>
-            </div>
+            <div class="chart-container" id="waste-causes-chart"></div>
           </div>
-          <div class="chart-container" id="waste-effects-chart"></div>
+        </div>
+        <div class="reveal-section">
+          <div class="insight-panel effects-panel reveal-stagger">
+            <h2>Environmental Impact</h2>
+            <div class="effects-preview">
+              <div class="effect-item reveal-stagger">
+                <span class="effect-icon">🚗</span>
+                <div>
+                  <h4>Climate Impact</h4>
+                  <p>8% of global emissions</p>
+                </div>
+              </div>
+              <div class="effect-item reveal-stagger">
+                <span class="effect-icon">🌊</span>
+                <div>
+                  <h4>Water Waste</h4>
+                  <p>21% of freshwater wasted</p>
+                </div>
+              </div>
+              <div class="effect-item reveal-stagger">
+                <span class="effect-icon">🚜</span>
+                <div>
+                  <h4>Land Misuse</h4>
+                  <p>28% of farmland</p>
+                </div>
+              </div>
+            </div>
+            <div class="chart-container" id="waste-effects-chart"></div>
+          </div>
+        </div>
+        <div class="reveal-section">
+          <div class="insight-panel solutions-panel reveal-stagger">
+            <h2>What Can We Do?</h2>
+            <div class="solutions-preview">
+              <div class="solution-item reveal-stagger">
+                <span class="solution-icon">📝</span>
+                <div>
+                  <h4>Smart Planning</h4>
+                  <p>30% waste reduction</p>
+                </div>
+              </div>
+              <div class="solution-item reveal-stagger">
+                <span class="solution-icon">🥫</span>
+                <div>
+                  <h4>Proper Storage</h4>
+                  <p>2-3x shelf life extension</p>
+                </div>
+              </div>
+              <div class="solution-item reveal-stagger">
+                <span class="solution-icon">♻️</span>
+                <div>
+                  <h4>Composting</h4>
+                  <p>34% methane reduction</p>
+                </div>
+              </div>
+            </div>
+            <div class="chart-container" id="waste-solutions-chart"></div>
+          </div>
+        </div>
+        <div class="reveal-section">
+          <div class="insight-panel impact-panel reveal-stagger">
+            <h2>Economic Impact Analysis</h2>
+            <div class="impact-preview">
+              <div class="impact-item reveal-stagger">
+                <span class="impact-stat">$1,500</span>
+                <span class="impact-label">Annual household savings potential</span>
+              </div>
+              <div class="impact-item reveal-stagger">
+                <span class="impact-stat">30%</span>
+                <span class="impact-label">Achievable waste reduction</span>
+              </div>
+              <div class="impact-item reveal-stagger">
+                <span class="impact-stat">2.5x</span>
+                <span class="impact-label">Environmental benefit multiplier</span>
+              </div>
+            </div>
+            <div class="chart-container" id="waste-impact-chart"></div>
+          </div>
         </div>
       </div>
-      
-      <!-- Solutions and Impact Row -->
-      <div class="insights-row">
-        <div class="insight-panel solutions-panel">
-          <h2>What Can We Do?</h2>
-          <div class="solutions-preview">
-            <div class="solution-item">
-              <span class="solution-icon">📝</span>
-              <div>
-                <h4>Smart Planning</h4>
-                <p>30% waste reduction</p>
-              </div>
-            </div>
-            <div class="solution-item">
-              <span class="solution-icon">🥫</span>
-              <div>
-                <h4>Proper Storage</h4>
-                <p>2-3x shelf life extension</p>
-              </div>
-            </div>
-            <div class="solution-item">
-              <span class="solution-icon">♻️</span>
-              <div>
-                <h4>Composting</h4>
-                <p>34% methane reduction</p>
-              </div>
-            </div>
-          </div>
-          <div class="chart-container" id="waste-solutions-chart"></div>
-        </div>
-        
-        <div class="insight-panel impact-panel">
-          <h2>Economic Impact Analysis</h2>
-          <div class="impact-preview">
-            <div class="impact-item">
-              <span class="impact-stat">$1,500</span>
-              <span class="impact-label">Annual household savings potential</span>
-            </div>
-            <div class="impact-item">
-              <span class="impact-stat">30%</span>
-              <span class="impact-label">Achievable waste reduction</span>
-            </div>
-            <div class="impact-item">
-              <span class="impact-stat">2.5x</span>
-              <span class="impact-label">Environmental benefit multiplier</span>
-            </div>
-          </div>
-          <div class="chart-container" id="waste-impact-chart"></div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </div>
 <div style="text-align: center; margin: 10%;">
   <h1>Thank you for reading</h1>

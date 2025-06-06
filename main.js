@@ -306,7 +306,7 @@ async function drawFoodWasteMap(year, operationId = null) {
     .text(currentViewMode === 'per10k' ? 'Tons per 10,000 people' : 'Total tons');
 }
 
-function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preserveContent = false) {
+function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preserveContent = false, leftShift = 40) {
   const container = d3.select(containerId);
   
   console.log(`animateFoodWasteFalling called - scale: ${scale}, preserveContent: ${preserveContent}`); // Debug log
@@ -320,11 +320,11 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
   }
   
   // Use consistent base dimensions and fixed ground position
-  const baseWidth = 400, baseHeight = 400;
+  const baseWidth = 400, baseHeight = 450;
   const width = baseWidth * scale, height = baseHeight * scale;
   
   // Fixed ground position (doesn't scale with container)
-  const fixedGroundY = 350; // Fixed Y position for ground
+  const fixedGroundY = 390; // Move plate up for more bottom margin
   const fixedPileWidth = 160; // Fixed pile width
   const fixedPileHeight = 35; // Fixed pile height
   
@@ -339,7 +339,7 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
       
     // Draw ground/pile base - use fixed position
     svg.append('ellipse')
-      .attr('cx', width/2)
+      .attr('cx', width/2 - leftShift)
       .attr('cy', fixedGroundY)
       .attr('rx', fixedPileWidth * scale)
       .attr('ry', fixedPileHeight * scale)
@@ -358,7 +358,7 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
     }
     
     pileBase
-      .attr('cx', width/2)
+      .attr('cx', width/2 - leftShift)
       .attr('cy', fixedGroundY) // Keep at fixed position
       .attr('rx', fixedPileWidth * scale)
       .attr('ry', fixedPileHeight * scale)
@@ -407,7 +407,7 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
     
     // Drop multiple circles for more intensity
     for (let i = 0; i < numCircles; i++) {
-      const x = width/2 + (Math.random()-0.5)*180*scale; // Scale spread
+      const x = width/2 - leftShift + (Math.random()-0.5)*180*scale; // Shift left
       const r = (8 + Math.random()*12) * scale; // Scale circle size
       const color = trashColors[Math.floor(Math.random()*trashColors.length)];
       const g = svg.append('g').attr('class', 'falling-circle');
@@ -679,6 +679,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const initialYear = yearSlider ? +yearSlider.value : 2023;
   drawFoodWasteBySubSectorBar({ year: initialYear, state: '' });
   drawFoodWasteByFoodTypeBar({ year: initialYear, state: '' });
+
+  // Reveal post-map sections with animation as they enter the viewport
+  setupRevealSections();
 });
 
 // Global variable to track current food visualization and prevent rapid switching
@@ -926,14 +929,20 @@ function updateTrashSummary(period) {
 function updateTrashAnimation(period) {
   // Determine which section we're in
   let newSection = 'person'; // default
+  let leftShift = 40;
   if (period.includes('household')) {
     newSection = 'household';
+    leftShift = 60;
   } else if (period.includes('city')) {
     newSection = 'city';
+    leftShift = 60;
   } else if (period.includes('state')) {
     newSection = 'state';
+    leftShift = 60;
+  } else if (period.includes('country')) {
+    newSection = 'country';
+    leftShift = 60;
   }
-  
   // Only update if we're actually switching sections OR if no animation exists yet
   if (newSection !== currentSection || !currentTrashAnimation) {
     console.log(`Transitioning from ${currentSection} to ${newSection}`); // Debug log
@@ -970,7 +979,7 @@ function updateTrashAnimation(period) {
     }
     
     // Start new animation with updated parameters
-    currentTrashAnimation = animateFoodWasteFalling('#fixed-trash-animation', scale, frequency, preserveContent);
+    currentTrashAnimation = animateFoodWasteFalling('#fixed-trash-animation', scale, frequency, preserveContent, leftShift);
     currentSection = newSection;
   }
   // If we're in the same section, do nothing - let the animation continue
@@ -2774,6 +2783,27 @@ document.addEventListener('keydown', (e) => {
         });
     }
 });
+
+// Reveal post-map sections with animation as they enter the viewport
+function setupRevealSections() {
+  const revealSections = document.querySelectorAll('.reveal-section');
+  const observer = new window.IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Stagger child animations for .reveal-stagger
+        const staggerItems = entry.target.querySelectorAll('.reveal-stagger');
+        staggerItems.forEach((item, i) => {
+          setTimeout(() => item.classList.add('visible'), i * 120);
+        });
+        observer.unobserve(entry.target); // Only animate once
+      }
+    });
+  }, {
+    threshold: 0.18
+  });
+  revealSections.forEach(section => observer.observe(section));
+}
 
 
 
