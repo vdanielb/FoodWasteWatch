@@ -152,44 +152,43 @@
   </section>
 
   <!-- Map section -->
-  <div class="map-container">
-    <div class="map-controls">
-      <label for="year-slider" id="year-slider-label">Year: <span id="year-slider-value">2023</span></label>
-      <input type="range" min="2014" max="2023" value="2023" id="year-slider">
-      <div class="view-controls">
-        <label for="view-mode">View:</label>
-        <select id="view-mode">
-          <option value="per10k">Waste per 10k people</option>
-          <option value="total">Total waste</option>
-        </select>
-      </div>
-    </div>
-    <h1 class="map-title">Food Waste by State</h1>
-    
-    <!-- Main Content Row: Map + Charts -->
-    <div class="map-content-row">
-      <!-- Left Side: Map -->
-      <div class="map-section">
-        <div id="map"></div>
-        <button id="reset-map" class="reset-button">Reset Filters</button>
-        
-        <!-- Map legend -->
-        <div id="map-legend" class="map-legend-container">
-        </div>
-      </div>
-      
-      <!-- Right Side: Charts -->
-      <div class="charts-sidebar">
-        <div class="d3-plot-container" id="d3-plot-top">
-          <!-- D3 visualization will be rendered here -->
-        </div>
-        
-        <div class="d3-plot-container" id="d3-plot-bottom">
-          <!-- D3 visualization will be rendered here -->
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="map-container" style="
+   background-color: #f5f7fa;
+   border-radius: 10px 10px 0 0;
+   margin: 0;
+ ">
+   <div style="width: 100%; display: flex; flex-direction: row; align-items: center; gap: 24px; margin-bottom: 1rem; margin-top: 2.5rem; position: absolute; top: 2rem; left:28%;">
+     <label for="year-slider" id="year-slider-label" style="font-size: 1.1rem; margin-bottom: 0;">Year: <span id="year-slider-value">2023</span></label>
+     <input type="range" min="2014" max="2023" value="2023" id="year-slider" style="width: 200px;">
+     <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
+       <label for="view-mode" style="font-size: 1.1rem;">View:</label>
+       <select id="view-mode" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+         <option value="per10k">Waste per 10k people</option>
+         <option value="total">Total waste</option>
+       </select>
+     </div>
+   </div>
+   <h1 style="position: absolute; top: 0; left: 0; right: 0; text-align: center; color: #333; margin: 2rem 0;">Food Waste by State</h1>
+   
+   <div id="map"></div>
+   <button id="reset-map" class="reset-button">Reset Filters</button>
+
+   <!-- Top D3 plot -->
+   <div class="d3-plot-container" id="d3-plot-top">
+     <!-- D3 visualization will be rendered here -->
+   </div>    
+   
+   <!-- Map legend -->
+   <div id="map-legend" style="width:100%;display:flex;justify-content:center;
+     margin:0 0 0 37%;
+     ">
+   </div>
+   
+   <!-- Bottom D3 plot -->
+   <div class="d3-plot-container" id="d3-plot-bottom">
+     <!-- D3 visualization will be rendered here -->
+   </div>
+ </div>
 
   <div style="background-color: white;">
 
