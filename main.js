@@ -626,8 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const perStateYear = perPersonYear * stateSize;
     
     // Calculate country amounts (entire USA population ~333 million people)
-    const countrySize = 333000000;
-    const perCountryYear = perPersonYear * countrySize;
+    const perCountryYear = totalLbs;
     
     // Store values globally for content changes
     window.foodWasteData = {
