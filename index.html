@@ -152,243 +152,452 @@
   </section>
 
   <!-- Map section -->
-  <div class="map-container" style="
-    background-color: #f5f7fa;
-    border-radius: 10px 10px 0 0;
-    margin: 0;
-  ">
-    <div style="width: 100%; display: flex; flex-direction: row; align-items: center; gap: 24px; margin-bottom: 1rem; margin-top: 2.5rem; position: absolute; top: 2rem; left:28%;">
-      <label for="year-slider" id="year-slider-label" style="font-size: 1.1rem; margin-bottom: 0;">Year: <span id="year-slider-value">2023</span></label>
-      <input type="range" min="2014" max="2023" value="2023" id="year-slider" style="width: 200px;">
-      <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
-        <label for="view-mode" style="font-size: 1.1rem;">View:</label>
-        <select id="view-mode" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+  <div class="map-container">
+    <div class="map-controls">
+      <label for="year-slider" id="year-slider-label">Year: <span id="year-slider-value">2023</span></label>
+      <input type="range" min="2014" max="2023" value="2023" id="year-slider">
+      <div class="view-controls">
+        <label for="view-mode">View:</label>
+        <select id="view-mode">
           <option value="per10k">Waste per 10k people</option>
           <option value="total">Total waste</option>
         </select>
       </div>
     </div>
-    <h1 style="position: absolute; top: 0; left: 0; right: 0; text-align: center; color: #333; margin: 2rem 0;">Food Waste by State</h1>
+    <h1 class="map-title">Food Waste by State</h1>
     
-    <div id="map"></div>
-    <button id="reset-map" class="reset-button">Reset Filters</button>
-
-    <!-- Top D3 plot -->
-    <div class="d3-plot-container" id="d3-plot-top">
-      <!-- D3 visualization will be rendered here -->
-    </div>    
-    
-    <!-- Map legend -->
-    <div id="map-legend" style="width:100%;display:flex;justify-content:center;
-      margin:0 0 0 37%;
-      ">
-    </div>
-    
-    <!-- Bottom D3 plot -->
-    <div class="d3-plot-container" id="d3-plot-bottom">
-      <!-- D3 visualization will be rendered here -->
+    <!-- Main Content Row: Map + Charts -->
+    <div class="map-content-row">
+      <!-- Left Side: Map -->
+      <div class="map-section">
+        <div id="map"></div>
+        <button id="reset-map" class="reset-button">Reset Filters</button>
+        
+        <!-- Map legend -->
+        <div id="map-legend" class="map-legend-container">
+        </div>
+      </div>
+      
+      <!-- Right Side: Charts -->
+      <div class="charts-sidebar">
+        <div class="d3-plot-container" id="d3-plot-top">
+          <!-- D3 visualization will be rendered here -->
+        </div>
+        
+        <div class="d3-plot-container" id="d3-plot-bottom">
+          <!-- D3 visualization will be rendered here -->
+        </div>
+      </div>
     </div>
   </div>
 
   <div style="background-color: #f5f7fa;">
 
-
-  <!-- Intro scrollytelling steps moved below the map -->
-  <section class="scrollytelling">
-    <div class="sticky-container">
-      <div class="sticky-content">
-        <!-- Step 1 — national tonnage -->
-        <div class="step" data-step="1">
-          <h2>Every year, Americans waste <span class="stat" id="stat-tons">75&nbsp;million&nbsp;tons</span> of food.</h2>
-          <p class="sub">That's roughly 40 % of everything produced for the table.</p>
-          <div class="animation-container" id="waste-animation-1"></div>
+  <!-- Key Statistics Dashboard -->
+  <section class="stats-dashboard">
+    <div class="dashboard-header">
+      <h1>Food Waste in America: The Numbers</h1>
+      <p class="dashboard-subtitle">A comprehensive look at the scale and impact of food waste in the United States</p>
+    </div>
+    
+    <!-- Core Statistics Grid -->
+    <div class="stats-grid">
+      <div class="stat-card primary" data-stat="tonnage">
+        <div class="stat-icon">🗑️</div>
+        <div class="stat-content">
+          <h3>Annual Food Waste</h3>
+          <div class="stat-number" id="stat-tons-dash">75M</div>
+          <div class="stat-unit">tons per year</div>
+          <p class="stat-description">40% of all food produced ends up in landfills</p>
         </div>
-        <!-- Step 2 — skyline comparison -->
-        <div class="step" data-step="2">
-          <h2>Stack it up and you could fill the Empire State Building <span class="stat" id="stat-esb">450</span> times.</h2>
-          <p class="sub">Picture New York's iconic tower overflowing with leftovers—<em>every three days</em>.</p>
-          <div class="animation-container" id="waste-animation-2"></div>
+        <div class="stat-animation" id="waste-animation-1-dash"></div>
+      </div>
+      
+      <div class="stat-card economic" data-stat="economic">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <h3>Economic Impact</h3>
+          <div class="stat-number" id="stat-value-dash">$440B</div>
+          <div class="stat-unit">lost annually</div>
+          <p class="stat-description">$1,400 wasted per household each year</p>
         </div>
-        <!-- Step 3 — household dollars -->
-        <div class="step" data-step="3">
-          <h2>The lost food is worth <span class="stat" id="stat-value">$440&nbsp;billion</span>.</h2>
-          <p class="sub">For the average family, that's <span class="stat" id="stat-household">$1,400</span> vanishing from the grocery budget each year.</p>
-          <div class="animation-container" id="waste-animation-3"></div>
+        <div class="stat-animation" id="waste-animation-3-dash"></div>
+      </div>
+      
+      <div class="stat-card comparison" data-stat="comparison">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-content">
+          <h3>Scale Comparison</h3>
+          <div class="stat-number" id="stat-esb-dash">450x</div>
+          <div class="stat-unit">Empire State Buildings</div>
+          <p class="stat-description">If stacked, wasted food would fill this iconic tower 450 times</p>
+        </div>
+        <div class="stat-animation" id="waste-animation-2-dash"></div>
+      </div>
+    </div>
+    
+    <!-- Environmental Impact Row -->
+    <div class="impact-section">
+      <h2 class="section-title">Environmental Consequences</h2>
+      <div class="impact-grid">
+        <div class="impact-card climate" data-impact="climate">
+          <div class="impact-visual" id="climate-visual"></div>
+          <div class="impact-details">
+            <h4>🚗 Climate Impact</h4>
+            <div class="impact-stat">58M cars equivalent</div>
+            <p>CO₂ emissions from rotting food equal the carbon footprint of every car in Texas and California combined</p>
+          </div>
+        </div>
+        
+        <div class="impact-card water" data-impact="water">
+          <div class="impact-visual" id="water-visual"></div>
+          <div class="impact-details">
+            <h4>🌊 Water Waste</h4>
+            <div class="impact-stat">21 trillion gallons</div>
+            <p>Enough to fill 2.3 million Olympic swimming pools - wasted on food that's never eaten</p>
+          </div>
+        </div>
+        
+        <div class="impact-card land" data-impact="land">
+          <div class="impact-visual" id="land-visual"></div>
+          <div class="impact-details">
+            <h4>🚜 Land Usage</h4>
+            <div class="impact-stat">56M acres</div>
+            <p>Agricultural land larger than Wisconsin dedicated to growing food that gets thrown away</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Solutions Row -->
+    <div class="solutions-section">
+      <h2 class="section-title">Potential for Change</h2>
+      <div class="solutions-grid">
+        <div class="solution-card positive" data-solution="hunger">
+          <div class="solution-icon">🍽️</div>
+          <div class="solution-content">
+            <h4>Fight Hunger</h4>
+            <div class="solution-stat">13M Americans</div>
+            <p>could be fed by rescuing just 10% of wasted food</p>
+          </div>
+        </div>
+        
+        <div class="solution-card savings" data-solution="savings">
+          <div class="solution-icon">💵</div>
+          <div class="solution-content">
+            <h4>Personal Savings</h4>
+            <div class="solution-stat">$700/year</div>
+            <p>potential savings per household with better food management</p>
+          </div>
+        </div>
+        
+        <div class="solution-card jobs" data-solution="jobs">
+          <div class="solution-icon">👥</div>
+          <div class="solution-content">
+            <h4>Job Creation</h4>
+            <div class="solution-stat">51K jobs</div>
+            <p>could be created through food recovery programs</p>
+          </div>
+        </div>
+        
+        <div class="solution-card environment" data-solution="methane">
+          <div class="solution-icon">♻️</div>
+          <div class="solution-content">
+            <h4>Methane Reduction</h4>
+            <div class="solution-stat">34% decrease</div>
+            <p>in methane emissions through composting instead of landfilling</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Extended Scrollytelling Section -->
-  <section class="scrollytelling">
-    <div class="sticky-container">
-      <div class="sticky-content">
-        <!-- Step 4 — climate impact -->
-        <div class="step" data-step="4">
-          <h2>As it rots, wasted food emits as much CO₂e as <span class="stat" id="stat-cars">58&nbsp;million</span> cars.</h2>
-          <p class="sub">That's every car in Texas <strong>and</strong> California combined.</p>
-          <div class="animation-container" id="waste-animation-4"></div>
+  <!-- Project Writeup Section -->
+  <section class="project-writeup">
+    <div class="writeup-container">
+      <div class="writeup-header">
+        <h1>Project Overview & Technical Implementation</h1>
+        <p class="writeup-subtitle">Comprehensive documentation of the Food Waste Watch visualization project</p>
+      </div>
+      
+      <!-- Project Summary Row -->
+      <div class="writeup-row">
+        <div class="writeup-panel accomplishments-panel">
+          <div class="panel-icon">🏆</div>
+          <h2>What We've Accomplished</h2>
+          <div class="accomplishment-list">
+            <div class="accomplishment-item">
+              <span class="accomplishment-icon">🗺️</span>
+              <div class="accomplishment-content">
+                <h4>Interactive State Map</h4>
+                <p>Created a comprehensive US map visualization displaying food waste data across all 50 states with hover tooltips, time slider controls, and multiple view modes.</p>
+              </div>
+            </div>
+            <div class="accomplishment-item">
+              <span class="accomplishment-icon">📊</span>
+              <div class="accomplishment-content">
+                <h4>Dynamic Dashboard</h4>
+                <p>Developed an engaging statistics dashboard with animated counters, side-by-side comparisons, and interactive visual elements showcasing key food waste metrics.</p>
+              </div>
+            </div>
+            <div class="accomplishment-item">
+              <span class="accomplishment-icon">🎬</span>
+              <div class="accomplishment-content">
+                <h4>Scrollytelling Experience</h4>
+                <p>Implemented immersive scrollytelling sections that guide users through personal, household, city, and national-scale food waste perspectives.</p>
+              </div>
+            </div>
+            <div class="accomplishment-item">
+              <span class="accomplishment-icon">🌐</span>
+              <div class="accomplishment-content">
+                <h4>Web Deployment</h4>
+                <p>Successfully deployed the project online with GitHub integration, making it accessible to a global audience and enabling collaborative development.</p>
+              </div>
+            </div>
+          </div>
         </div>
-  
-        <!-- Step 5 — water footprint -->
-        <div class="step" data-step="5">
-          <h2>Growing that uneaten food guzzles <span class="stat" id="stat-water">21&nbsp;trillion</span> gallons of water.</h2>
-          <p class="sub">Enough to fill <span class="stat" id="stat-pools">2.3&nbsp;million</span> Olympic swimming pools.</p>
-          <div class="animation-container" id="waste-animation-5"></div>
+        
+        <div class="writeup-panel challenges-panel">
+          <div class="panel-icon">⚡</div>
+          <h2>Technical Challenges</h2>
+          <div class="challenge-list">
+            <div class="challenge-item">
+              <span class="challenge-priority high">High</span>
+              <div class="challenge-content">
+                <h4>Animation Performance</h4>
+                <p>Optimizing complex D3.js animations and transitions to maintain smooth performance across different devices and browsers while handling large datasets.</p>
+              </div>
+            </div>
+            <div class="challenge-item">
+              <span class="challenge-priority medium">Medium</span>
+              <div class="challenge-content">
+                <h4>Responsive Design</h4>
+                <p>Ensuring all visualizations and interactions work seamlessly across desktop, tablet, and mobile devices with varying screen sizes and touch interfaces.</p>
+              </div>
+            </div>
+            <div class="challenge-item">
+              <span class="challenge-priority medium">Medium</span>
+              <div class="challenge-content">
+                <h4>Data Processing</h4>
+                <p>Efficiently processing and transforming large food waste datasets while maintaining real-time interactivity and smooth user experience.</p>
+              </div>
+            </div>
+            <div class="challenge-item">
+              <span class="challenge-priority low">Low</span>
+              <div class="challenge-content">
+                <h4>Cross-browser Compatibility</h4>
+                <p>Ensuring consistent behavior and appearance across different web browsers, including handling of modern CSS features and JavaScript APIs.</p>
+              </div>
+            </div>
+          </div>
         </div>
-  
-        <!-- Step 6 — land footprint -->
-        <div class="step" data-step="6">
-          <h2>It also ties up <span class="stat" id="stat-land">56&nbsp;million</span> acres of farmland.</h2>
-          <p class="sub">That's an area larger than the state of <strong>Wisconsin</strong>.</p>
-          <div class="animation-container" id="waste-animation-6"></div>
+      </div>
+      
+      <!-- Technical Details Row -->
+      <div class="writeup-row">
+        <div class="writeup-panel technology-panel">
+          <div class="panel-icon">🛠️</div>
+          <h2>Technology Stack</h2>
+          <div class="tech-grid">
+            <div class="tech-category">
+              <h4>📊 Visualization</h4>
+              <div class="tech-items">
+                <span class="tech-item">D3.js v7</span>
+                <span class="tech-item">TopoJSON</span>
+                <span class="tech-item">SVG Animations</span>
+                <span class="tech-item">CSS Transitions</span>
+              </div>
+            </div>
+            <div class="tech-category">
+              <h4>🎨 Frontend</h4>
+              <div class="tech-items">
+                <span class="tech-item">HTML5</span>
+                <span class="tech-item">CSS3</span>
+                <span class="tech-item">JavaScript ES6+</span>
+                <span class="tech-item">Responsive Design</span>
+              </div>
+            </div>
+            <div class="tech-category">
+              <h4>📱 Features</h4>
+              <div class="tech-items">
+                <span class="tech-item">Interactive Maps</span>
+                <span class="tech-item">Scrollytelling</span>
+                <span class="tech-item">Hover Effects</span>
+                <span class="tech-item">Time Controls</span>
+              </div>
+            </div>
+            <div class="tech-category">
+              <h4>🚀 Deployment</h4>
+              <div class="tech-items">
+                <span class="tech-item">GitHub Pages</span>
+                <span class="tech-item">Version Control</span>
+                <span class="tech-item">CI/CD Pipeline</span>
+                <span class="tech-item">Web Optimization</span>
+              </div>
+            </div>
+          </div>
         </div>
-  
-        <!-- Step 7 — hunger offset -->
-        <div class="step" data-step="7">
-          <h2>Rescuing even <strong>just 10 %</strong> of wasted food could feed <span class="stat" id="stat-people">13&nbsp;million</span> Americans facing hunger.</h2>
-          <div class="animation-container" id="waste-animation-7"></div>
+        
+        <div class="writeup-panel data-panel">
+          <div class="panel-icon">📈</div>
+          <h2>Data Sources & Methodology</h2>
+          <div class="data-source-primary">
+            <h4>🏛️ Primary Dataset</h4>
+            <div class="data-details">
+              <span class="data-title">ReFED U.S. State Food Surplus Summary</span>
+              <span class="data-period">2014-2023</span>
+              <p class="data-description">Comprehensive state-level food waste data covering production, consumption, and waste generation across multiple sectors including residential, commercial, and industrial.</p>
+            </div>
+          </div>
+          
+          <div class="methodology-section">
+            <h4>🔬 Analysis Approach</h4>
+            <div class="methodology-steps">
+              <div class="method-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <h5>Data Cleaning</h5>
+                  <p>Standardized state names, handled missing values, and normalized units across different measurement systems.</p>
+                </div>
+              </div>
+              <div class="method-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <h5>Statistical Processing</h5>
+                  <p>Calculated per-capita metrics, trend analysis, and comparative statistics for meaningful visualization.</p>
+                </div>
+              </div>
+              <div class="method-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <h5>Visualization Design</h5>
+                  <p>Applied data visualization best practices for color schemes, scales, and interactive elements to ensure accessibility.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-  
-        <!-- Step 8 — personal savings -->
-        <div class="step" data-step="8">
-          <h2>Keeping half your leftovers each week could keep <span class="stat" id="stat-personal">$700</span> in your wallet every year.</h2>
-          <p class="sub">That's two months of average utility bills.</p>
-          <div class="animation-container" id="waste-animation-8"></div>
-        </div>
-  
-        <!-- Step 9 — methane cut via compost -->
-        <div class="step" data-step="9">
-          <h2>Composting the scraps instead of landfilling them can slash methane by <span class="stat" id="stat-methane">34 %</span>.</h2>
-          <div class="animation-container" id="waste-animation-9"></div>
-        </div>
-  
-        <!-- Step 10 — job creation -->
-        <div class="step" data-step="10">
-          <h2>Food-recovery programs could create <span class="stat" id="stat-jobs">51,000</span> new U.S. jobs.</h2>
-          <p class="sub">That's equivalent to the entire craft-brewing industry workforce.</p>
-          <div class="animation-container" id="waste-animation-10"></div>
-        </div>
-  
       </div>
     </div>
   </section>
 
   <!-- Causes, Effects, and Solutions Section -->
-  <section class="scrollytelling">
-    <div class="sticky-container">
-      <div class="sticky-content">
-        <!-- Causes Section -->
-        <div class="step" data-step="11">
+  <section class="insights-section">
+    <div class="insights-container">
+      <div class="insights-header">
+        <h1>Understanding Food Waste: Causes, Effects & Solutions</h1>
+        <p class="insights-subtitle">Explore the comprehensive analysis of America's food waste crisis</p>
+      </div>
+      
+      <!-- Causes and Effects Row -->
+      <div class="insights-row">
+        <div class="insight-panel causes-panel">
           <h2>Why Does Food Waste Happen?</h2>
-          <div class="causes-grid">
+          <div class="causes-preview">
             <div class="cause-item">
-              <div class="cause-icon">🛒</div>
-              <h3>Overbuying</h3>
-              <p>43% of food waste occurs at the consumer level due to impulse purchases</p>
+              <span class="cause-icon">🛒</span>
+              <div>
+                <h4>Overbuying</h4>
+                <p>43% due to impulse purchases</p>
+              </div>
             </div>
             <div class="cause-item">
-              <div class="cause-icon">📅</div>
-              <h3>Expiration Confusion</h3>
-              <p>20% of food is discarded due to date label confusion</p>
+              <span class="cause-icon">📅</span>
+              <div>
+                <h4>Date Confusion</h4>
+                <p>20% from expiration labels</p>
+              </div>
             </div>
             <div class="cause-item">
-              <div class="cause-icon">🍽️</div>
-              <h3>Large Portions</h3>
-              <p>Restaurants serve portions 2-8 times larger than recommended</p>
+              <span class="cause-icon">🍽️</span>
+              <div>
+                <h4>Large Portions</h4>
+                <p>2-8x recommended sizes</p>
+              </div>
             </div>
           </div>
-          <div class="visualization-container" id="waste-causes-chart"></div>
+          <div class="chart-container" id="waste-causes-chart"></div>
         </div>
-
-        <!-- Effects Section -->
-        <div class="step" data-step="12">
+        
+        <div class="insight-panel effects-panel">
           <h2>Environmental Impact</h2>
-          <div class="effects-grid">
+          <div class="effects-preview">
             <div class="effect-item">
-              <div class="effect-icon">🌡️</div>
-              <h3>Greenhouse Gases</h3>
-              <p>Food waste generates 8% of global greenhouse gas emissions</p>
+              <span class="effect-icon">🚗</span>
+              <div>
+                <h4>Climate Impact</h4>
+                <p>8% of global emissions</p>
+              </div>
             </div>
             <div class="effect-item">
-              <div class="effect-icon">💧</div>
-              <h3>Water Waste</h3>
-              <p>21% of freshwater used to grow food that's never eaten</p>
+              <span class="effect-icon">🌊</span>
+              <div>
+                <h4>Water Waste</h4>
+                <p>21% of freshwater wasted</p>
+              </div>
             </div>
             <div class="effect-item">
-              <div class="effect-icon">🌱</div>
-              <h3>Land Use</h3>
-              <p>28% of agricultural land used to grow food that's wasted</p>
+              <span class="effect-icon">🚜</span>
+              <div>
+                <h4>Land Misuse</h4>
+                <p>28% of farmland</p>
+              </div>
             </div>
           </div>
-          <div class="visualization-container" id="waste-effects-chart"></div>
+          <div class="chart-container" id="waste-effects-chart"></div>
         </div>
-
-        <!-- Solutions Section -->
-        <div class="step" data-step="13">
+      </div>
+      
+      <!-- Solutions and Impact Row -->
+      <div class="insights-row">
+        <div class="insight-panel solutions-panel">
           <h2>What Can We Do?</h2>
-          <div class="solutions-grid">
+          <div class="solutions-preview">
             <div class="solution-item">
-              <div class="solution-icon">📝</div>
-              <h3>Plan & Shop Smart</h3>
-              <p>Reduces household food waste by up to 30%</p>
+              <span class="solution-icon">📝</span>
+              <div>
+                <h4>Smart Planning</h4>
+                <p>30% waste reduction</p>
+              </div>
             </div>
             <div class="solution-item">
-              <div class="solution-icon">🥫</div>
-              <h3>Store Properly</h3>
-              <p>Extends food shelf life by 2-3 times</p>
+              <span class="solution-icon">🥫</span>
+              <div>
+                <h4>Proper Storage</h4>
+                <p>2-3x shelf life extension</p>
+              </div>
             </div>
             <div class="solution-item">
-              <div class="solution-icon">♻️</div>
-              <h3>Compost</h3>
-              <p>Reduces methane emissions by 34%</p>
+              <span class="solution-icon">♻️</span>
+              <div>
+                <h4>Composting</h4>
+                <p>34% methane reduction</p>
+              </div>
             </div>
           </div>
-          <div class="visualization-container" id="waste-solutions-chart"></div>
+          <div class="chart-container" id="waste-solutions-chart"></div>
         </div>
-
-        <!-- Call to Action -->
-        <div class="step" data-step="14">
-          <h2>Start Making a Difference Today</h2>
-          <div class="cta-container">
-            <p class="cta-text">Small changes in your daily routine can have a big impact on reducing food waste.</p>
-            <div class="visualization-container" id="waste-impact-chart"></div>
-            <div class="cta-stats">
-              <div class="stat-item">
-                <span class="stat-number">30%</span>
-                <span class="stat-label">Potential Reduction</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">$1,500</span>
-                <span class="stat-label">Annual Savings</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">2.5x</span>
-                <span class="stat-label">Environmental Impact</span>
-              </div>
+        
+        <div class="insight-panel impact-panel">
+          <h2>Economic Impact Analysis</h2>
+          <div class="impact-preview">
+            <div class="impact-item">
+              <span class="impact-stat">$1,500</span>
+              <span class="impact-label">Annual household savings potential</span>
+            </div>
+            <div class="impact-item">
+              <span class="impact-stat">30%</span>
+              <span class="impact-label">Achievable waste reduction</span>
+            </div>
+            <div class="impact-item">
+              <span class="impact-stat">2.5x</span>
+              <span class="impact-label">Environmental benefit multiplier</span>
             </div>
           </div>
+          <div class="chart-container" id="waste-impact-chart"></div>
         </div>
       </div>
     </div>
-  </section>
-
-  <section class="notes">
-    <h2>Writeup</h2>
-    <p> <br><b>What have you done so far? </b><br>
-
-    <br> So far, we've created the main visualization for the project, which is a map that displays how much waste is generated across different states in the USA. We have hover and tooltips implemented in our map, but we intend to add more interactive features such as being able to click on a specific state to view the breakdown of waste based on sector. <br>
-    
-    <br> We've also set up a GitHub repository and deployed the webpage, so it's already accessible online. In addition, we plan to create a second visualization to complement the map, which takes a scrollytelling format, to put into perspective how much waste each person, household, city, etc is generating, on average. <br>
-    
-    <br><b> What will be the most challenging of your project to design and why? </b><br>
-    
-    <br> The most challenging aspect will likely be designing and implementing the animations for the scrollytelling section, which requires good technical execution and also creativity in how we present the data in a meaningful and relatable way. We need to create a compelling narrative that clearly communicates the main insights while still being easy to understand. Then, we aim to add more interactive elements to keep the webpage engaging and informative for users. <br> 
-    
-    <br> Lastly, it will also be a challenge to improve the performance of our visualization to make it more seamless. <br></p>
-    
-    <h2>Data</h2>
-    <p>ReFED U.S. State Food Surplus Summary, 2014-2023.</p>
   </section>
 </div>
 

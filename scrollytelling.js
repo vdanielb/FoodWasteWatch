@@ -413,7 +413,7 @@ function animateClimateImpact() {
     .attr('font-size', '18px')
     .attr('font-weight', 'bold')
     .attr('fill', '#2c3e50')
-    .text('🌡️ Climate Impact Equivalent');
+    .text('🚗 Climate Impact Equivalent');
   
   // Create animated cars
   const carPositions = [
@@ -514,7 +514,7 @@ function animateWaterFootprint() {
     .attr('font-size', '18px')
     .attr('font-weight', 'bold')
     .attr('fill', '#2c3e50')
-    .text('💧 Water Resources Wasted');
+    .text('🌊 Water Resources Wasted');
   
   // Create animated water pool
   const poolWidth = 300;
@@ -785,5 +785,160 @@ function animateJobCreation() {
     });
 }
 
+// Dashboard Animation Functions
+function initializeDashboard() {
+  // Animate stat cards on load
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+      card.style.transition = 'all 0.6s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0px)';
+    }, index * 200);
+  });
+  
+  // Initialize dashboard animations
+  animateDashboardStats();
+  setupImpactVisuals();
+  animateSolutionCards();
+}
+
+function animateDashboardStats() {
+  // Animate core statistics
+  animateStatNumber('stat-tons-dash', 75, 'M', 2000);
+  animateStatNumber('stat-value-dash', 440, 'B', 2500);
+  animateStatNumber('stat-esb-dash', 450, 'x', 2200);
+  
+  // Add floating animations to stat cards
+  const primaryCard = document.querySelector('.stat-card.primary');
+  const economicCard = document.querySelector('.stat-card.economic');
+  const comparisonCard = document.querySelector('.stat-card.comparison');
+  
+  if (primaryCard) createFloatingAnimation(primaryCard);
+  if (economicCard) createFloatingAnimation(economicCard);
+  if (comparisonCard) createFloatingAnimation(comparisonCard);
+}
+
+function animateStatNumber(elementId, targetValue, suffix, duration) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  let currentValue = 0;
+  const increment = targetValue / (duration / 50);
+  
+  const timer = setInterval(() => {
+    currentValue += increment;
+    if (currentValue >= targetValue) {
+      currentValue = targetValue;
+      clearInterval(timer);
+    }
+    element.textContent = Math.round(currentValue) + suffix;
+  }, 50);
+}
+
+function setupImpactVisuals() {
+  // Climate impact visual
+  const climateVisual = document.getElementById('climate-visual');
+  if (climateVisual) {
+    climateVisual.innerHTML = createFloatingEmojis(['🚗', '💨', '☁️'], 3);
+  }
+  
+  // Water impact visual
+  const waterVisual = document.getElementById('water-visual');
+  if (waterVisual) {
+    waterVisual.innerHTML = createFloatingEmojis(['🌊', '🏊‍♂️', '🏊‍♀️'], 3);
+  }
+  
+  // Land impact visual
+  const landVisual = document.getElementById('land-visual');
+  if (landVisual) {
+    landVisual.innerHTML = createFloatingEmojis(['🚜', '🌾', '🏞️'], 3);
+  }
+}
+
+function createFloatingEmojis(emojis, count) {
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    const emoji = emojis[i % emojis.length];
+    const delay = i * 0.5;
+    html += `<span style="
+      position: absolute;
+      font-size: 1.2rem;
+      animation: float 3s ease-in-out infinite;
+      animation-delay: ${delay}s;
+      top: ${Math.random() * 40 + 20}%;
+      left: ${Math.random() * 40 + 30}%;
+    ">${emoji}</span>`;
+  }
+  return html;
+}
+
+function animateSolutionCards() {
+  const solutionCards = document.querySelectorAll('.solution-card');
+  
+  // Intersection Observer for solution cards
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animation = 'slideInUp 0.6s ease forwards';
+      }
+    });
+  }, { threshold: 0.3 });
+  
+  solutionCards.forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    observer.observe(card);
+  });
+}
+
+function createFloatingAnimation(element) {
+  if (!element) return;
+  
+  element.style.animation = 'gentleFloat 4s ease-in-out infinite';
+  
+  // Add keyframes if not already present
+  if (!document.querySelector('#floating-keyframes')) {
+    const style = document.createElement('style');
+    style.id = 'floating-keyframes';
+    style.textContent = `
+      @keyframes gentleFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0px);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 // Initialize scrollytelling when the page loads
-document.addEventListener('DOMContentLoaded', initScrollytelling); 
+document.addEventListener('DOMContentLoaded', initScrollytelling);
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // ... existing code ...
+  
+  // Initialize dashboard if present
+  if (document.querySelector('.stats-dashboard')) {
+    setTimeout(initializeDashboard, 500);
+  }
+}); 
