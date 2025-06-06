@@ -430,30 +430,89 @@ h2 {
 }
 
 .fixed-layout {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  position: sticky;
+  top: 50vh;
+  transform: translateY(-50%);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 0 2rem;
+  height: 550px;
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  gap: 0;
 }
 
+/* Container for trash animation and summary text */
 .trash-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  flex: 1;
-  max-width: 600px;
+  gap: 25px;
+  pointer-events: auto;
+  flex: 0 0 40%;
+  max-width: none;
+  padding: 0 2rem;
 }
 
+/* Food visualization area on the right */
 .food-visualization-area {
-  flex: 1;
-  max-width: 600px;
+  flex: 0 0 60%;
+  max-width: none;
+  height: 480px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  transition: all 0.3s ease, opacity 0.2s ease, transform 0.2s ease;
+  padding: 20px;
+  pointer-events: auto;
+  margin-left: 0;
+}
+
+/* Updated Responsive Design for Scrollytelling */
+@media (max-width: 1200px) {
+  .fixed-layout {
+    gap: 0;
+    padding: 0;
+  }
+  
+  .trash-container {
+    flex: 0 0 45%;
+  }
+  
+  .food-visualization-area {
+    flex: 0 0 55%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .fixed-layout {
+    flex-direction: column;
+    gap: 2rem;
+    height: auto;
+    min-height: 80vh;
+    padding: 2rem;
+  }
+  
+  .trash-container {
+    order: 1;
+    flex: none;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .food-visualization-area {
+    order: 2;
+    flex: none;
+    width: 100%;
+    max-width: 800px;
+  }
 }
 
 .moving-text-box {
@@ -825,15 +884,15 @@ h2 {
   top: 50vh;
   transform: translateY(-50%);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   height: 550px;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   pointer-events: none;
-  gap: 4rem;
+  gap: 0;
 }
 
 /* Container for trash animation and summary text */
@@ -843,8 +902,67 @@ h2 {
   align-items: center;
   gap: 25px;
   pointer-events: auto;
-  flex: 1;
-  max-width: 600px;
+  flex: 0 0 40%;
+  max-width: none;
+  padding: 0 2rem;
+}
+
+/* Food visualization area on the right */
+.food-visualization-area {
+  flex: 0 0 60%;
+  max-width: none;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  transition: all 0.3s ease, opacity 0.2s ease, transform 0.2s ease;
+  padding: 20px;
+  pointer-events: auto;
+  margin-left: 0;
+}
+
+/* Updated Responsive Design for Scrollytelling */
+@media (max-width: 1200px) {
+  .fixed-layout {
+    gap: 0;
+    padding: 0;
+  }
+  
+  .trash-container {
+    flex: 0 0 45%;
+  }
+  
+  .food-visualization-area {
+    flex: 0 0 55%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .fixed-layout {
+    flex-direction: column;
+    gap: 2rem;
+    height: auto;
+    min-height: 80vh;
+    padding: 2rem;
+  }
+  
+  .trash-container {
+    order: 1;
+    flex: none;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .food-visualization-area {
+    order: 2;
+    flex: none;
+    width: 100%;
+    max-width: 800px;
+  }
 }
 
 /* Fixed trash animation */
@@ -879,24 +997,6 @@ h2 {
   color: #e74c3c;
   font-weight: 700;
   font-size: 1.1em;
-}
-
-/* Food visualization area on the right */
-.food-visualization-area {
-  flex: 1;
-  max-width: 600px;
-  height: 480px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: transparent; /* Removed background to match trash animation */
-  border-radius: 0; /* Removed border radius */
-  box-shadow: none; /* Removed shadow/border */
-  transition: all 0.3s ease, opacity 0.2s ease, transform 0.2s ease; /* Added smooth transitions */
-  padding: 20px; /* Reduced padding to make more room for content */
-  pointer-events: auto; /* Re-enable for this element */
-  margin-left: 40px; /* Added margin to push further right */
 }
 
 /* Moving text boxes - now free to move across entire viewport */
@@ -1148,25 +1248,30 @@ h2 {
   transition-delay: 0.5s;
 }
 
+/* Remove side padding and max-width for edge-to-edge emoji grid */
 .country-container {
   position: relative;
-  width: 100vw; /* Full viewport width */
-  height: 250vh; /* Reduced from 300vh to match the section height */
+  width: 100vw;
+  height: 250vh;
   margin: 0;
   display: flex;
-  align-items: flex-start; /* Align to top since we're much taller now */
+  align-items: flex-start;
   justify-content: center;
+  padding: 0;
+  max-width: none;
 }
 
 .country-visual {
   position: relative;
-  width: 100%; /* Use full width */
-  height: 100%; /* Use full height */
-  background: transparent; /* Remove background */
-  border: none; /* Remove border */
-  border-radius: 0; /* Remove border radius */
+  width: 100vw;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: none; /* Remove shadow */
+  box-shadow: none;
+  padding: 0;
+  max-width: none;
 }
 
 .country-scale {

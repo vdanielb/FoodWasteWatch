@@ -1001,21 +1001,25 @@ function initCountrySection() {
   }
   
   // Generate grid of food emojis
-  const rows = 50; // Reduced from 120 to 50 for better spacing and less density
-  const cols = 35; // Reduced from 60 to 35 to leave more space for markers
+  // Dynamically calculate columns based on container width and emoji size
+  const emojiSize = 32; // px, matches .food-emoji font-size in CSS
+  const scaleSafeZone = 200; // px, increased padding on the right
+  const containerWidth = countryVisual.offsetWidth || window.innerWidth;
+  const availableWidth = containerWidth - scaleSafeZone;
+  const cols = Math.floor(availableWidth / emojiSize);
+  const rows = 50; // Keep rows fixed for now
   const totalEmojis = rows * cols;
-  
+
   for (let i = 0; i < totalEmojis; i++) {
     const emoji = document.createElement('div');
     emoji.className = 'food-emoji';
     emoji.textContent = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
-    
     const row = Math.floor(i / cols);
     const col = i % cols;
-    
-    emoji.style.left = `${(col / (cols - 1)) * 85}%`; // Reduced from 96% to 85% to leave more space for markers
-    emoji.style.top = `${(row / (rows - 1)) * 95}%`; // Reduced slightly for better vertical spacing
-    
+    // Place emojis only within the available width (0% to (availableWidth/containerWidth)*100%)
+    const leftPercent = (col / (cols - 1)) * (availableWidth / containerWidth) * 100;
+    emoji.style.left = `${leftPercent}%`;
+    emoji.style.top = `${(row / (rows - 1)) * 95}%`;
     countryVisual.appendChild(emoji);
   }
   
