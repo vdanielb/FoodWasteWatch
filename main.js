@@ -79,6 +79,7 @@ if (yearSlider && yearSliderValue) {
         drawFoodWasteMap(year, operationId);
         drawFoodWasteBySubSectorBar({ year, state: selectedState || '', operationId });
         drawFoodWasteByFoodTypeBar({ year, state: selectedState || '', operationId });
+        drawSpeedometer(selectedState || '', year, operationId);
       }
     }, 150);
   });
@@ -172,6 +173,7 @@ async function drawFoodWasteMap(year, operationId = null) {
       const currentYear = yearSlider ? +yearSlider.value : year;
       drawFoodWasteBySubSectorBar({ year: currentYear, state: stateName });
       drawFoodWasteByFoodTypeBar({ year: currentYear, state: stateName });
+      drawSpeedometer(stateName, currentYear);
         
       // Tooltip
       const waste = wasteByState.get(stateName);
@@ -202,6 +204,7 @@ async function drawFoodWasteMap(year, operationId = null) {
         const currentYear = yearSlider ? +yearSlider.value : year;
         drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
         drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
+        drawSpeedometer('', currentYear);
         states.transition().duration(200).style('opacity', 1);
       }
       tooltip.style('display', 'none');
@@ -214,6 +217,7 @@ async function drawFoodWasteMap(year, operationId = null) {
         selectedState = null;
         drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
         drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
+        drawSpeedometer('', currentYear);
         states.transition().duration(200).style('opacity', 1);
       } else {
         selectedState = stateName;
@@ -227,6 +231,7 @@ async function drawFoodWasteMap(year, operationId = null) {
           // Draw plots for selected state
           drawFoodWasteBySubSectorBar({ year: currentYear, state: selectedState });
           drawFoodWasteByFoodTypeBar({ year: currentYear, state: selectedState });
+          drawSpeedometer(selectedState, currentYear);
       }
     });
 
@@ -249,6 +254,7 @@ async function drawFoodWasteMap(year, operationId = null) {
     const currentYear = yearSlider ? +yearSlider.value : year;
     drawFoodWasteBySubSectorBar({ year: currentYear, state: '' });
     drawFoodWasteByFoodTypeBar({ year: currentYear, state: '' });
+    drawSpeedometer('', currentYear);
     states.transition().duration(200).style('opacity', 1);
     // Note: Don't reset the year slider - keep the user's selected year
   });
@@ -679,6 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const initialYear = yearSlider ? +yearSlider.value : 2023;
   drawFoodWasteBySubSectorBar({ year: initialYear, state: '' });
   drawFoodWasteByFoodTypeBar({ year: initialYear, state: '' });
+  drawSpeedometer('', initialYear);
 
   // Reveal post-map sections with animation as they enter the viewport
   setupRevealSections();
@@ -2378,6 +2385,196 @@ function initImpactChart() {
 // top k sub-sectors/food types
 const k = 5;
 
+// Speedometer visualization function
+async function drawSpeedometer(state = '', year = 2023, operationId = null) {
+  const { wasteData } = await loadGlobalData();
+  
+  // Check if operation was cancelled after async operation
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Calculate total waste for the state (or US total if no state)
+  let filtered = wasteData.filter(d => d.year === +year);
+  if (state) {
+    filtered = filtered.filter(d => d.state === state);
+  }
+  
+  const totalWaste = d3.sum(filtered, d => d.tons_waste);
+  
+  // Check if operation was cancelled before DOM updates
+  if (operationId && operationId !== currentOperationId) {
+    return; // Cancel this operation
+  }
+  
+  // Set up SVG
+  const container = d3.select('#d3-speedometer');
+  container.selectAll('*').remove();
+  const width = 360, height = 200;
+  const svg = container.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  
+  // Speedometer parameters
+  const centerX = width / 2;
+  const centerY = height - 40;
+  const radius = 70;
+  const startAngle = -Math.PI / 2; // Start at bottom left
+  const endAngle = Math.PI / 2;    // End at bottom right
+  
+  // Convert tons to billion pounds (tons * 2000 / 1,000,000,000)
+  const totalWasteBillionPounds = (totalWaste * 2000) / 1000000000;
+  
+  // Scale for the speedometer (max 126 billion pounds - US total)
+  const maxWaste = 126; // 126 billion pounds
+  const wasteScale = d3.scaleLinear()
+    .domain([0, maxWaste])
+    .range([startAngle, endAngle])
+    .clamp(true);
+  
+  // Create gauge background arc
+  const backgroundArc = d3.arc()
+    .innerRadius(radius - 15)
+    .outerRadius(radius)
+    .startAngle(startAngle)
+    .endAngle(endAngle);
+  
+  svg.append('path')
+    .attr('d', backgroundArc)
+    .attr('transform', `translate(${centerX}, ${centerY})`)
+    .attr('fill', '#e0e0e0')
+    .attr('stroke', '#ccc')
+    .attr('stroke-width', 1);
+  
+  // Create value arc (will be animated)
+  const valueArc = d3.arc()
+    .innerRadius(radius - 15)
+    .outerRadius(radius)
+    .startAngle(startAngle);
+  
+  const valueArcPath = svg.append('path')
+    .attr('transform', `translate(${centerX}, ${centerY})`)
+    .attr('fill', '#e74c3c')
+    .attr('stroke', '#c0392b')
+    .attr('stroke-width', 1);
+  
+  // Add tick marks
+  const tickData = d3.range(0, maxWaste + 1, maxWaste / 6); // 6 divisions for cleaner look
+  const tickGroup = svg.append('g')
+    .attr('transform', `translate(${centerX}, ${centerY})`);
+  
+  tickGroup.selectAll('.tick')
+    .data(tickData)
+    .enter()
+    .append('line')
+    .attr('class', 'tick')
+    .attr('x1', 0)
+    .attr('y1', -radius + 5)
+    .attr('x2', 0)
+    .attr('y2', -radius + 15)
+    .attr('stroke', '#666')
+    .attr('stroke-width', 2)
+    .attr('transform', d => `rotate(${(wasteScale(d) * 180 / Math.PI)})`);
+  
+  // Add labels
+  tickGroup.selectAll('.tick-label')
+    .data(tickData)
+    .enter()
+    .append('text')
+    .attr('class', 'tick-label')
+    .attr('x', 0)
+    .attr('y', -radius + 25)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '10px')
+    .attr('fill', '#666')
+    .attr('transform', d => `rotate(${(wasteScale(d) * 180 / Math.PI)}) rotate(${-(wasteScale(d) * 180 / Math.PI)}, 0, ${-radius + 25})`)
+    .text(d => d === 0 ? '0' : Math.round(d) + 'B');
+  
+  // Add needle
+  const needleGroup = svg.append('g')
+    .attr('transform', `translate(${centerX}, ${centerY})`);
+  
+  const needle = needleGroup.append('polygon')
+    .attr('points', '0,-50 -3,0 0,5 3,0')
+    .attr('fill', '#333')
+    .attr('stroke', '#000')
+    .attr('stroke-width', 1)
+    .attr('transform', `rotate(${startAngle * 180 / Math.PI})`);
+  
+  // Add center circle
+  needleGroup.append('circle')
+    .attr('r', 6)
+    .attr('fill', '#333')
+    .attr('stroke', '#000')
+    .attr('stroke-width', 2);
+  
+  // Add title
+  svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', 20)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '14px')
+    .attr('font-weight', 'bold')
+    .attr('fill', '#2c3e50')
+    .text('Total Food Waste');
+  
+  // Add state/country label
+  svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', 35)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '12px')
+    .attr('fill', '#7f8c8d')
+    .text(state ? `${state}, ${year}` : `US Total, ${year}`);
+  
+  // Add value display
+  const valueText = svg.append('text')
+    .attr('x', width / 2)
+    .attr('y', height - 10)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '16px')
+    .attr('font-weight', 'bold')
+    .attr('fill', '#e74c3c')
+    .text('0 billion lbs');
+  
+  // Animation function
+  function animateSpeedometer(targetWasteBillionPounds) {
+    const targetAngle = wasteScale(targetWasteBillionPounds);
+    
+    // Animate the arc
+    valueArcPath.transition()
+      .duration(1500)
+      .ease(d3.easeCubicOut)
+      .attrTween('d', function() {
+        const interpolate = d3.interpolate(startAngle, targetAngle);
+        return function(t) {
+          return valueArc.endAngle(interpolate(t))();
+        };
+      });
+    
+    // Animate the needle
+    needle.transition()
+      .duration(1500)
+      .ease(d3.easeCubicOut)
+      .attr('transform', `rotate(${targetAngle * 180 / Math.PI})`);
+    
+    // Animate the value text
+    valueText.transition()
+      .duration(1500)
+      .ease(d3.easeCubicOut)
+      .tween('text', function() {
+        const interpolate = d3.interpolate(0, targetWasteBillionPounds);
+        return function(t) {
+          const value = interpolate(t);
+          d3.select(this).text(d3.format(',.1f')(value) + ' billion lbs');
+        };
+      });
+  }
+  
+  // Start animation
+  setTimeout(() => animateSpeedometer(totalWasteBillionPounds), 100);
+}
+
 async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationId = null } = {}) {
   const { wasteData } = await loadGlobalData();
   
@@ -2396,8 +2593,14 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
     v => d3.sum(v, d => d.tons_waste),
     d => d.sub_sector === 'Not Applicable' ? d.sector : d.sub_sector
   );
-  grouped.sort((a, b) => b[1] - a[1]);
-  const top5 = grouped.slice(0, k);
+  
+  // Calculate total waste for percentage calculation
+  const totalWaste = d3.sum(grouped, d => d[1]);
+  
+  // Convert to percentages and sort
+  const groupedWithPercentages = grouped.map(d => [d[0], d[1], (d[1] / totalWaste) * 100]);
+  groupedWithPercentages.sort((a, b) => b[2] - a[2]);
+  const top5 = groupedWithPercentages.slice(0, k);
   
   // Check if operation was cancelled before DOM updates
   if (operationId && operationId !== currentOperationId) {
@@ -2416,10 +2619,9 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
     .domain(top5.map(d => d[0]))
     .range([margin.top, height - margin.bottom])
     .padding(0.15);
-  // X scale (millions of tons)
+  // X scale (fixed 0-100%)
   const x = d3.scaleLinear()
-    .domain([0, d3.max(top5, d => d[1] / 1e6)])
-    .nice()
+    .domain([0, 100])
     .range([margin.left, width - margin.right]);
   // Tooltip div (one global for this chart)
   let tooltip = d3.select('#d3-plot-top-tooltip');
@@ -2445,7 +2647,7 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
     .on('mousemove', function(event, d) {
       tooltip
         .style('display', 'block')
-        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
+        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format('.1f')(d[2])}%</span> (${d3.format(',.2f')(d[1])} tons)`)
         .style('left', (event.pageX + 12) + 'px')
         .style('top', (event.pageY - 24) + 'px');
       d3.select(this).attr('fill', '#b35413');
@@ -2457,7 +2659,7 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
 
   bars.transition()
     .duration(800)
-    .attr('width', d => x(d[1] / 1e6) - x(0));
+    .attr('width', d => x(d[2]) - x(0));
 
   // Y axis
   svg.append('g')
@@ -2465,10 +2667,10 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
     .call(d3.axisLeft(y))
     .selectAll('text')
     .style('font-size', '13px');
-  // X axis (millions)
+  // X axis (percentages)
   svg.append('g')
     .attr('transform', `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
+    .call(d3.axisBottom(x).ticks(5).tickFormat(d => d + '%'))
     .selectAll('text')
     .style('font-size', '12px');
   // X axis label
@@ -2477,7 +2679,7 @@ async function drawFoodWasteBySubSectorBar({ year = 2023, state = '', operationI
     .attr('y', height - 10)
     .attr('text-anchor', 'middle')
     .attr('font-size', '13px')
-    .text('Millions of Tons');
+    .text('Percentage (%)');
   
   svg.append('text')
     .attr('x', width / 2)
@@ -2513,8 +2715,14 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
     v => d3.sum(v, d => d.tons_waste),
     d => d.food_type
   );
-  grouped.sort((a, b) => b[1] - a[1]);
-  const top5 = grouped.slice(0, k);
+  
+  // Calculate total waste for percentage calculation
+  const totalWaste = d3.sum(grouped, d => d[1]);
+  
+  // Convert to percentages and sort
+  const groupedWithPercentages = grouped.map(d => [d[0], d[1], (d[1] / totalWaste) * 100]);
+  groupedWithPercentages.sort((a, b) => b[2] - a[2]);
+  const top5 = groupedWithPercentages.slice(0, k);
   
   // Check if operation was cancelled before DOM updates
   if (operationId && operationId !== currentOperationId) {
@@ -2533,10 +2741,9 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
     .domain(top5.map(d => d[0]))
     .range([margin.top, height - margin.bottom])
     .padding(0.15);
-  // X scale (millions of tons)
+  // X scale (fixed 0-100%)
   const x = d3.scaleLinear()
-    .domain([0, d3.max(top5, d => d[1] / 1e6)])
-    .nice()
+    .domain([0, 100])
     .range([margin.left, width - margin.right]);
   // Tooltip div (one global for this chart)
   let tooltip = d3.select('#d3-plot-bottom-tooltip');
@@ -2562,7 +2769,7 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
     .on('mousemove', function(event, d) {
       tooltip
         .style('display', 'block')
-        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format(',.2f')(d[1])} tons</span>`)
+        .html(`<strong>${d[0]}</strong><br><span class="red-number">${d3.format('.1f')(d[2])}%</span> (${d3.format(',.2f')(d[1])} tons)`)
         .style('left', (event.pageX + 12) + 'px')
         .style('top', (event.pageY - 24) + 'px');
       d3.select(this).attr('fill', '#1d5e8a');
@@ -2574,7 +2781,7 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
 
     bars.transition()
       .duration(800)
-      .attr('width', d => x(d[1] / 1e6) - x(0));
+      .attr('width', d => x(d[2]) - x(0));
 
     // Y axis
     svg.append('g')
@@ -2582,10 +2789,10 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
       .call(d3.axisLeft(y))
       .selectAll('text')
       .style('font-size', '13px');
-    // X axis (millions)
+    // X axis (percentages)
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(k).tickFormat(d => d3.format(',.1f')(d)))
+      .call(d3.axisBottom(x).ticks(5).tickFormat(d => d + '%'))
       .selectAll('text')
       .style('font-size', '12px');
     // X axis label
@@ -2594,7 +2801,7 @@ async function drawFoodWasteByFoodTypeBar({ year = 2023, state = '', operationId
       .attr('y', height - 10)
       .attr('text-anchor', 'middle')
       .attr('font-size', '13px')
-      .text('Millions of Tons');
+      .text('Percentage (%)');
 
     svg.append('text')
       .attr('x', width / 2)

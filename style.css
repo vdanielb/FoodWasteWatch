@@ -306,7 +306,7 @@ h2 {
   max-width: 1400px;
   display: grid;
   grid-template-columns: 1fr 400px;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto auto auto;
   gap: 0rem;
   align-items: start;
 }
@@ -315,7 +315,7 @@ h2 {
   height: 500px;
   width: 100%;
   grid-column: 1;
-  grid-row: 2 / 4;
+  grid-row: 2 / 5;
   margin-top: 4.5rem;
 }
 
@@ -329,14 +329,20 @@ h2 {
   position: relative;
 }
 
-#d3-plot-top {
+#d3-speedometer {
   grid-column: 2;
   grid-row: 2;
+  height: 200px;
+}
+
+#d3-plot-top {
+  grid-column: 2;
+  grid-row: 3;
 }
 
 #d3-plot-bottom {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 4;
 }
 
 
@@ -352,6 +358,10 @@ h2 {
     height: 250px;
   }
   
+  #d3-speedometer {
+    height: 180px;
+  }
+  
   #map {
     height: 520px;
   }
@@ -360,7 +370,7 @@ h2 {
 @media (max-width: 1000px) {
   .map-container {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
     max-width: 800px;
   }
   
@@ -375,14 +385,20 @@ h2 {
     height: 450px;
   }
   
-  #d3-plot-top {
+  #d3-speedometer {
     grid-column: 1;
     grid-row: 3;
+    height: 250px;
+  }
+  
+  #d3-plot-top {
+    grid-column: 1;
+    grid-row: 4;
   }
   
   #d3-plot-bottom {
     grid-column: 1;
-    grid-row: 4;
+    grid-row: 5;
   }
   
   .d3-plot-container {
