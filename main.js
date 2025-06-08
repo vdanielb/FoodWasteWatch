@@ -320,12 +320,12 @@ function animateFoodWasteFalling(containerId, scale = 1, frequency = 400, preser
   }
   
   // Use consistent base dimensions and fixed ground position
-  const baseWidth = 400, baseHeight = 450;
+  const baseWidth = 400, baseHeight = 500; // Increased from 450 to 500 to prevent bottom cutoff
   const width = baseWidth * scale, height = baseHeight * scale;
   
   // Fixed ground position (doesn't scale with container)
   const fixedGroundY = 390; // Move plate up for more bottom margin
-  const fixedPileWidth = 160; // Fixed pile width
+  const fixedPileWidth = 120; // Fixed pile width - reduced from 160 to prevent side cutoff
   const fixedPileHeight = 35; // Fixed pile height
   
   let svg = container.select('svg');
@@ -714,149 +714,121 @@ function updateFoodVisualization(period) {
       // Day: Apples (0.33 lbs each)
       const appleWeight = 0.33;
       const numApples = Math.max(1, Math.round(window.foodWasteData.day / appleWeight));
-      let applesSVG = '';
-      const applesPerRow = 8; // More apples per row for larger space
+      let applesHTML = '';
+      const applesPerRow = 8;
       const appleRows = Math.ceil(numApples / applesPerRow);
-      const appleGridWidth = applesPerRow * 25; // Increased spacing
-      const appleSVGWidth = 450; // Much larger width
-      const appleSVGHeight = 250; // Increased height
-      const appleXOffset = (appleSVGWidth - appleGridWidth) / 2 + 12;
-      const appleYStart = 40; // Better positioning
-      
+      const appleGridWidth = applesPerRow * 32; // 32px per emoji
+      const appleHTMLWidth = 450;
+      const appleHTMLHeight = 250;
+      const appleXOffset = (appleHTMLWidth - appleGridWidth) / 2;
+      const appleYStart = 0;
+      applesHTML += `<div style="width:${appleHTMLWidth}px;height:${appleHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;">`;
       for (let i = 0; i < numApples; i++) {
-        const x = appleXOffset + (i % applesPerRow) * 25; // Increased spacing
-        const y = appleYStart + Math.floor(i / applesPerRow) * 30; // Increased row spacing
-        applesSVG += `<g><ellipse cx="${x}" cy="${y}" rx="11" ry="11" fill="#e74c3c" stroke="#b53c2e" stroke-width="2.5"/><rect x="${x-2.5}" y="${y-15}" width="5" height="10" fill="#8e5a1d"/></g>`;
+        applesHTML += `<span style="font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;">🍎</span>`;
       }
-      
+      applesHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${appleSVGWidth}" height="${appleSVGHeight}" style="display:block;margin:0 auto;">${applesSVG}</svg>
+        ${applesHTML}
         <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numApples} apples (0.33 lbs each)</div>
       `;
     } else if (period === 'month') {
       // Month: Loaves of bread (1 lb each)
       const loafWeight = 1;
       const numLoaves = Math.max(1, Math.round(window.foodWasteData.month / loafWeight));
-      let loavesSVG = '';
-      const loavesPerCol = 6; // More per column for larger space
-      const loavesCols = Math.ceil(numLoaves / loavesPerCol);
-      const loafGridWidth = loavesCols * 35; // Increased spacing
-      const loafSVGWidth = 450; // Much larger width
-      const loafSVGHeight = 280; // Increased height
-      const loafXOffset = (loafSVGWidth - loafGridWidth) / 2 + 17;
-      const loafYStart = 40;
-      
+      let loavesHTML = '';
+      const loavesPerRow = 8;
+      const loafRows = Math.ceil(numLoaves / loavesPerRow);
+      const loafGridWidth = loavesPerRow * 32;
+      const loafHTMLWidth = 450;
+      const loafHTMLHeight = 280;
+      loavesHTML += `<div style=\"width:${loafHTMLWidth}px;height:${loafHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;\">`;
       for (let i = 0; i < numLoaves; i++) {
-        const x = loafXOffset + Math.floor(i / loavesPerCol) * 35; // Increased spacing
-        const y = loafYStart + (i % loavesPerCol) * 30; // Increased spacing
-        loavesSVG += `<g><rect x="${x-12}" y="${y-10}" width="24" height="20" rx="7" fill="#e2b07a" stroke="#a67c52" stroke-width="2.5"/><ellipse cx="${x}" cy="${y-10}" rx="12" ry="7" fill="#fffbe6" opacity="0.7"/></g>`;
+        loavesHTML += `<span style=\"font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;\">🍞</span>`;
       }
-      
+      loavesHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${loafSVGWidth}" height="${loafSVGHeight}" style="display:block;margin:0 auto;">${loavesSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numLoaves} loaves of bread (1 lb each)</div>
+        ${loavesHTML}
+        <div style=\"text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;\">That's about ${numLoaves} loaves of bread (1 lb each)</div>
       `;
     } else if (period === 'year') {
       // Year: Watermelons (5 lbs each)
       const melonWeight = 5;
       const numMelons = Math.max(1, Math.round(window.foodWasteData.year / melonWeight));
-      let melonsSVG = '';
-      const melonsPerCol = 8; // More per column for larger space
-      const melonsCols = Math.ceil(numMelons / melonsPerCol);
-      const melonGridWidth = melonsCols * 40; // Increased spacing
-      const melonSVGWidth = 480; // Much larger width
-      const melonSVGHeight = 320; // Increased height
-      const melonXOffset = (melonSVGWidth - melonGridWidth) / 2 + 20;
-      const melonYStart = 40;
-      
+      let melonsHTML = '';
+      const melonsPerRow = 8;
+      const melonRows = Math.ceil(numMelons / melonsPerRow);
+      const melonGridWidth = melonsPerRow * 32;
+      const melonHTMLWidth = 480;
+      const melonHTMLHeight = 320;
+      melonsHTML += `<div style=\"width:${melonHTMLWidth}px;height:${melonHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;\">`;
       for (let i = 0; i < numMelons; i++) {
-        const x = melonXOffset + Math.floor(i / melonsPerCol) * 40; // Increased spacing
-        const y = melonYStart + (i % melonsPerCol) * 32; // Increased spacing
-        melonsSVG += `<g><ellipse cx="${x}" cy="${y}" rx="16" ry="16" fill="#a3c586" stroke="#4e7d3a" stroke-width="3"/><ellipse cx="${x}" cy="${y}" rx="10" ry="10" fill="#fff" opacity="0.15"/></g>`;
+        melonsHTML += `<span style=\"font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;\">🍉</span>`;
       }
-      
+      melonsHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${melonSVGWidth}" height="${melonSVGHeight}" style="display:block;margin:0 auto;">${melonsSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;">That's about ${numMelons} watermelons (5 lbs each)</div>
+        ${melonsHTML}
+        <div style=\"text-align:center;font-size:1.4em;color:#666;margin-top:20px;font-weight:500;\">That's about ${numMelons} watermelons (5 lbs each)</div>
       `;
     } else if (period === 'householdYear') {
       // Household Year: Grocery bags (15 lbs each)
       const bagWeight = 15;
       const numBags = Math.max(1, Math.round(window.foodWasteData.householdYear / bagWeight));
-      let bagsSVG = '';
-      const bagsPerCol = 6; // Increased to 6 to create more rows and reduce width
-      const bagsCols = Math.ceil(numBags / bagsPerCol);
-      const bagGridWidth = bagsCols * 42; // Reduced spacing further
-      const bagSVGWidth = 580; // Keep same width
-      const bagSVGHeight = 450; // Keep same height
-      const bagXOffset = (bagSVGWidth - bagGridWidth) / 2 + 21; // Better centering
-      const bagYStart = 60; // Reduced top margin slightly
-      
+      let bagsHTML = '';
+      const bagsPerRow = 8;
+      const bagRows = Math.ceil(numBags / bagsPerRow);
+      const bagGridWidth = bagsPerRow * 32;
+      const bagHTMLWidth = 580;
+      const bagHTMLHeight = 450;
+      bagsHTML += `<div style=\"width:${bagHTMLWidth}px;height:${bagHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;\">`;
       for (let i = 0; i < numBags; i++) {
-        const x = bagXOffset + Math.floor(i / bagsPerCol) * 42; // Reduced spacing
-        const y = bagYStart + (i % bagsPerCol) * 40; // Reduced vertical spacing
-        // Grocery bag shape - even smaller size to fit better
-        bagsSVG += `<g><rect x="${x-12}" y="${y-3}" width="24" height="18" rx="2.5" fill="#8b4513" stroke="#654321" stroke-width="1.2"/><rect x="${x-9}" y="${y-12}" width="18" height="10" fill="#deb887" stroke="#8b7355" stroke-width="1"/><line x1="${x-6}" y1="${y-9}" x2="${x+6}" y2="${y-9}" stroke="#4a4a4a" stroke-width="1.5" stroke-linecap="round"/></g>`;
+        bagsHTML += `<span style=\"font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;\">🧺</span>`;
       }
-      
+      bagsHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${bagSVGWidth}" height="${bagSVGHeight}" style="display:block;margin:0 auto;">${bagsSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numBags} full grocery bags (15 lbs each)</div>
+        ${bagsHTML}
+        <div style=\"text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;\">That's about ${numBags} full grocery bags (15 lbs each)</div>
       `;
     } else if (period === 'cityYear') {
       // City Year: Delivery trucks (2000 lbs each)
       const truckWeight = 2000;
-      const numTrucks = Math.max(1, Math.round((window.foodWasteData.cityYear * 1000000) / truckWeight));
-      let trucksSVG = '';
-      const trucksPerCol = 8;
-      const trucksCols = Math.ceil(numTrucks / trucksPerCol);
-      const truckGridWidth = trucksCols * 35;
-      const truckSVGWidth = 580;
-      const truckSVGHeight = 450;
-      const truckXOffset = (truckSVGWidth - truckGridWidth) / 2 + 17;
-      const truckYStart = 50;
-      
-      for (let i = 0; i < numTrucks; i++) {
-        const x = truckXOffset + Math.floor(i / trucksPerCol) * 35;
-        const y = truckYStart + (i % trucksPerCol) * 35;
-        // Delivery truck shape
-        trucksSVG += `<g><rect x="${x-15}" y="${y-6}" width="30" height="12" rx="2" fill="#4a90e2" stroke="#2171b5" stroke-width="1.5"/><rect x="${x-12}" y="${y-10}" width="8" height="8" fill="#74a9f7" stroke="#2171b5" stroke-width="1"/><circle cx="${x-8}" cy="${y+8}" r="3" fill="#333"/><circle cx="${x+8}" cy="${y+8}" r="3" fill="#333"/></g>`;
+      const totalTrucks = Math.max(1, Math.round((window.foodWasteData.cityYear * 1000000) / truckWeight));
+      const trucksPerRow = 18;
+      const maxRows = 8;
+      const maxEmojis = trucksPerRow * maxRows; // 56 emojis
+      const numTrucksToShow = Math.min(totalTrucks, maxEmojis);
+      const trucksPerEmoji = Math.ceil(totalTrucks / numTrucksToShow);
+      let trucksHTML = '';
+      const truckGridWidth = trucksPerRow * 32;
+      const truckHTMLWidth = 580;
+      const truckHTMLHeight = 320;
+      trucksHTML += `<div style=\"width:${truckHTMLWidth}px;height:${truckHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;\">`;
+      for (let i = 0; i < numTrucksToShow; i++) {
+        trucksHTML += `<span style=\"font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;\">🚚</span>`;
       }
-      
+      trucksHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${truckSVGWidth}" height="${truckSVGHeight}" style="display:block;margin:0 auto;">${trucksSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numTrucks} delivery trucks full of food (2000 lbs each)</div>
+        ${trucksHTML}
+        <div style=\"text-align:center;font-size:1.1em;color:#888;margin-top:8px;\">Each truck = ${trucksPerEmoji} actual trucks</div>
+        <div style=\"text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;\">That's about ${totalTrucks} delivery trucks full of food (2000 lbs each)</div>
       `;
     } else if (period === 'stateYear') {
       // State Year: Cargo ships (10 million lbs each - representing massive industrial scale)
       const shipWeight = 10000000; // 10 million lbs per cargo ship
       const numShips = Math.max(1, Math.round((window.foodWasteData.stateYear * 1000000000) / shipWeight));
-      let shipsSVG = '';
-      const shipsPerCol = 10; // More per column since we have fewer ships
-      const shipsCols = Math.ceil(numShips / shipsPerCol);
-      const shipGridWidth = shipsCols * 35; // Spacing for ships
-      const shipSVGWidth = 580;
-      const shipSVGHeight = 450;
-      const shipXOffset = (shipSVGWidth - shipGridWidth) / 2 + 17;
-      const shipYStart = 50;
-      
+      let shipsHTML = '';
+      const shipsPerRow = 8;
+      const shipRows = Math.ceil(numShips / shipsPerRow);
+      const shipGridWidth = shipsPerRow * 32;
+      const shipHTMLWidth = 580;
+      const shipHTMLHeight = 450;
+      shipsHTML += `<div style=\"width:${shipHTMLWidth}px;height:${shipHTMLHeight}px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin:0 auto;\">`;
       for (let i = 0; i < numShips; i++) {
-        const x = shipXOffset + Math.floor(i / shipsPerCol) * 35;
-        const y = shipYStart + (i % shipsPerCol) * 35;
-        // Cargo ship shape - hull, superstructure, containers
-        shipsSVG += `<g>
-          <ellipse cx="${x}" cy="${y+5}" rx="16" ry="4" fill="#2c3e50" stroke="#1a252f" stroke-width="1"/>
-          <rect x="${x-14}" y="${y-2}" width="28" height="7" rx="2" fill="#34495e" stroke="#2c3e50" stroke-width="1"/>
-          <rect x="${x-10}" y="${y-8}" width="6" height="6" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
-          <rect x="${x-3}" y="${y-8}" width="6" height="6" fill="#3498db" stroke="#2980b9" stroke-width="0.5"/>
-          <rect x="${x+4}" y="${y-8}" width="6" height="6" fill="#f39c12" stroke="#e67e22" stroke-width="0.5"/>
-          <rect x="${x+8}" y="${y-5}" width="4" height="8" fill="#95a5a6" stroke="#7f8c8d" stroke-width="0.5"/>
-        </g>`;
+        shipsHTML += `<span style=\"font-size:32px;line-height:36px;width:32px;height:36px;display:inline-block;text-align:center;\">🚢</span>`;
       }
-      
+      shipsHTML += `</div>`;
       container.innerHTML = `
-        <svg width="${shipSVGWidth}" height="${shipSVGHeight}" style="display:block;margin:0 auto;">${shipsSVG}</svg>
-        <div style="text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;">That's about ${numShips} cargo ships full of food (10 million lbs each)</div>
+        ${shipsHTML}
+        <div style=\"text-align:center;font-size:1.4em;color:#666;margin-top:15px;font-weight:500;\">That's about ${numShips} ferries full of food (10 million lbs each)</div>
       `;
     }
     

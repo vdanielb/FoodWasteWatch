@@ -1291,7 +1291,7 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 0.8rem; /* Slightly smaller for better fit */
+  font-size: 1.2rem; /* Increased from 0.8rem to make markings larger */
   color: #666;
   font-weight: 600;
 }
