@@ -719,7 +719,7 @@ h2 {
   opacity: 1;
   transform: translateY(-5px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  border-left-color: #e74c3c;
+  border-left-color: #ff5722; /* Reverted back to red */
 }
 
 .step h2 {
@@ -738,9 +738,9 @@ h2 {
 }
 
 .step .stat {
-  color: #e74c3c;
+  color: #ff5722; /* Reverted back to red */
   font-weight: 800;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  background: linear-gradient(135deg, #ff5722, #e64a19);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -994,7 +994,7 @@ h2 {
 }
 
 .trash-summary .amount {
-  color: #e74c3c;
+  color: #ff5722; /* Reverted back to red */
   font-weight: 700;
   font-size: 1.1em;
 }
@@ -1045,33 +1045,33 @@ h2 {
 
 /* Enhanced text highlighting for numbers */
 .fw-day, .fw-month, .fw-year {
-  color: #e74c3c;
+  color: #ff5722; /* Reverted back to red */
   font-weight: 900;
-  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
   transition: all 0.3s ease;
 }
 
 /* Household text highlighting */
 .fw-household-day, .fw-household-month, .fw-household-year {
-  color: #e74c3c;
+  color: #ff5722; /* Reverted back to red */
   font-weight: 900;
-  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
   transition: all 0.3s ease;
 }
 
 /* City and State text highlighting */
 .fw-city-year, .fw-state-year {
-  color: #e74c3c;
+  color: #ff5722; /* Reverted back to red */
   font-weight: 900;
-  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
   transition: all 0.3s ease;
 }
 
-/* Country text highlighting */
+/* Country text highlighting - change back to red */
 .fw-country-year {
-  color: #e74c3c;
+  color: #ff5722; /* Changed back to red */
   font-weight: 900;
-  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
   transition: all 0.3s ease;
 }
 
@@ -1231,11 +1231,17 @@ h2 {
   animation-delay: 0.5s;
 }
 
-/* Red number styling */
+/* Red number styling - change back to red */
 .red-number {
-  color: #e74c3c;
+  color: #ff5722; /* Changed back to red */
   font-weight: 700;
-  text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
+}
+
+/* Specific override for California transition text only */
+#transition-text-1 .red-number {
+  color: #FFFF8A; /* Yellow only for this specific text */
+  text-shadow: 0 0 5px rgba(255, 255, 138, 0.3);
 }
 
 /* Animation classes */
@@ -1564,8 +1570,7 @@ h2 {
   opacity: 0;
   transform: translateY(50px);
   transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  z-index: 20;
-  border: 3px solid #e74c3c;
+  /* Removed z-index: 20 to allow normal scrolling */
 }
 
 .country-conclusion.visible {
@@ -1843,7 +1848,7 @@ h2 {
 .stat-number {
   font-size: 2.2em;
   font-weight: 700;
-  color: #e74c3c;
+  color: #FFFF8A; /* Changed to yellow */
   margin-bottom: 8px;
 }
 
@@ -2057,7 +2062,7 @@ h2 {
 }
 
 .stat-card.primary {
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 142, 83, 0.2));
+  background: linear-gradient(135deg, rgba(255, 255, 138, 0.2), rgba(255, 242, 83, 0.2));
 }
 
 .stat-card.economic {
@@ -2065,7 +2070,7 @@ h2 {
 }
 
 .stat-card.comparison {
-  background: linear-gradient(135deg, rgba(131, 58, 180, 0.2), rgba(253, 29, 29, 0.2));
+  background: linear-gradient(135deg, rgba(131, 58, 180, 0.2), rgba(255, 255, 138, 0.2));
 }
 
 .stat-icon {
@@ -2168,10 +2173,11 @@ h2 {
 }
 
 .impact-stat {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #fbbf24;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ff5722; /* Changed back to red */
+  margin-bottom: 5px;
+  display: block;
 }
 
 .impact-details p {
@@ -2396,7 +2402,7 @@ h2 {
 .impact-stat {
   font-size: 2.2rem;
   font-weight: 800;
-  color: #fbbf24;
+  color: #ff5722; /* Changed back to red */
   margin-bottom: 5px;
   display: block;
 }
@@ -2418,7 +2424,7 @@ h2 {
 
 /* Panel-specific styling */
 .causes-panel {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 101, 101, 0.2));
+  background: linear-gradient(135deg, rgba(255, 255, 138, 0.2), rgba(245, 242, 101, 0.2));
 }
 
 .effects-panel {
@@ -2607,8 +2613,8 @@ h2 {
 }
 
 .challenge-priority.high {
-  background: rgba(239, 68, 68, 0.8);
-  color: white;
+  background: rgba(255, 255, 138, 0.8);
+  color: black;
 }
 
 .challenge-priority.medium {
@@ -2833,4 +2839,23 @@ h2 {
 .reveal-stagger.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Red number styling - change back to red */
+.red-number {
+  color: #ff5722; /* Changed back to red */
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
+}
+
+/* Specific override for California transition text only */
+#transition-text-1 .red-number {
+  color: #FFFF8A; /* Yellow only for this specific text */
+  text-shadow: 0 0 5px rgba(255, 255, 138, 0.3);
+}
+
+/* Ensure country conclusion section uses red */
+.country-conclusion .red-number {
+  color: #ff5722 !important; /* Force red for country conclusion */
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.3) !important;
 }
