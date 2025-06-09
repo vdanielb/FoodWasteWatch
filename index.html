@@ -157,7 +157,7 @@
    border-radius: 10px 10px 0 0;
    margin: 0;
  ">
-   <div style="width: 100%; display: flex; flex-direction: row; align-items: center; gap: 24px; margin-bottom: 1rem; margin-top: 2.5rem; position: absolute; top: 2rem; left:28%;">
+   <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 24px; margin-bottom: 1rem; margin-top: 2.5rem; position: absolute; top: 2rem; left: 50%; transform: translateX(-50%); max-width: 600px;">
      <label for="year-slider" id="year-slider-label" style="font-size: 1.1rem; margin-bottom: 0;">Year: <span id="year-slider-value">2023</span></label>
      <input type="range" min="2014" max="2023" value="2023" id="year-slider" style="width: 200px;">
      <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
@@ -201,11 +201,11 @@
   <div class="reveal-section" id="reveal-stats">
     <section class="stats-dashboard">
       <div class="dashboard-header">
-        <h1>Food Waste in America: The Numbers</h1>
-        <p class="dashboard-subtitle">A comprehensive look at the scale and impact of food waste in the United States</p>
+        <h1>So how bad is <span class="red-number">126 billion pounds</span> of food waste?</h1>
       </div>
       
       <!-- Core Statistics Grid -->
+       <h2>It's equivalent to:</h2>
       <div class="stats-grid">
         <div class="stat-card primary reveal-stagger" data-stat="tonnage">
           <div class="stat-icon">🗑️</div>
@@ -243,7 +243,7 @@
       
       <!-- Environmental Impact Row -->
       <div class="impact-section reveal-stagger">
-        <h2 class="section-title">Environmental Consequences</h2>
+        <h2 class="section-title">Think of the environmental consequences</h2>
         <div class="impact-grid">
           <div class="impact-card climate reveal-stagger" data-impact="climate">
             <div class="impact-visual" id="climate-visual"></div>
@@ -276,7 +276,7 @@
       
       <!-- Solutions Row -->
       <div class="solutions-section reveal-stagger">
-        <h2 class="section-title">Potential for Change</h2>
+        <h2 class="section-title">Imagine if we could reduce food waste...</h2>
         <div class="solutions-grid">
           <div class="solution-card positive reveal-stagger" data-solution="hunger">
             <div class="solution-icon">🍽️</div>

@@ -677,8 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCountrySection();
   });
 
-  // Initialize causes, effects, and solutions visualizations
-  initCausesEffectsSolutionsVisualizations();
+  // Charts will be initialized when their sections become visible via setupRevealSections()
 
   // Add this function to render the US-wide sub_sector bar chart with initial year
   const yearSlider = document.getElementById('year-slider');
@@ -1212,22 +1211,36 @@ function initSidebarMenu() {
 
 // Data visualization functions for causes, effects, and solutions section
 function initCausesEffectsSolutionsVisualizations() {
-    // Initialize all visualizations
-    initCausesChart();
-    initEffectsChart();
-    initSolutionsChart();
-    initImpactChart();
+    // Initialize all visualizations with a slight delay to ensure DOM is ready
+    setTimeout(() => {
+        initCausesChart();
+        initEffectsChart();
+        initSolutionsChart();
+        initImpactChart();
+    }, 100);
 }
 
 function initCausesChart() {
     const container = d3.select('#waste-causes-chart');
-    if (container.empty()) return;
+    if (container.empty()) {
+        console.log('Causes chart container not found');
+        return;
+    }
     
     // Clear any existing content
     container.selectAll('*').remove();
     
-    const width = container.node().getBoundingClientRect().width || 400;
-    const height = 550; // Increased height for better layout
+    // Get container width, with better fallback
+    const containerElement = container.node();
+    const rect = containerElement.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const width = containerWidth > 0 ? containerWidth : 600;
+    const height = 550;
+    
+    console.log('Causes chart - width:', width, 'containerWidth:', containerWidth);
+    console.log('Causes chart - container rect:', rect);
+    console.log('Causes chart - container styles:', window.getComputedStyle(containerElement));
+    console.log('Causes chart - container visible:', rect.width > 0 && rect.height > 0);
     
     const svg = container.append('svg')
         .attr('width', width)
@@ -1409,13 +1422,24 @@ function initCausesChart() {
 
 function initEffectsChart() {
     const container = d3.select('#waste-effects-chart');
-    if (container.empty()) return;
+    if (container.empty()) {
+        console.log('Effects chart container not found');
+        return;
+    }
     
     // Clear any existing content
     container.selectAll('*').remove();
     
-    const width = container.node().getBoundingClientRect().width || 400;
+    // Get container width, with better fallback
+    const containerElement = container.node();
+    const rect = containerElement.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const width = containerWidth > 0 ? containerWidth : 600;
     const height = 550;
+    
+    console.log('Effects chart - width:', width, 'containerWidth:', containerWidth);
+    console.log('Effects chart - container rect:', rect);
+    console.log('Effects chart - container visible:', rect.width > 0 && rect.height > 0);
     
     const svg = container.append('svg')
         .attr('width', width)
@@ -1679,13 +1703,24 @@ function initEffectsChart() {
 
 function initSolutionsChart() {
     const container = d3.select('#waste-solutions-chart');
-    if (container.empty()) return;
+    if (container.empty()) {
+        console.log('Solutions chart container not found');
+        return;
+    }
     
     // Clear any existing content
     container.selectAll('*').remove();
     
-    const width = container.node().getBoundingClientRect().width || 400;
+    // Get container width, with better fallback
+    const containerElement = container.node();
+    const rect = containerElement.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const width = containerWidth > 0 ? containerWidth : 600;
     const height = 550;
+    
+    console.log('Solutions chart - width:', width, 'containerWidth:', containerWidth);
+    console.log('Solutions chart - container rect:', rect);
+    console.log('Solutions chart - container visible:', rect.width > 0 && rect.height > 0);
     
     const svg = container.append('svg')
         .attr('width', width)
@@ -1991,13 +2026,24 @@ function initSolutionsChart() {
 
 function initImpactChart() {
     const container = d3.select('#waste-impact-chart');
-    if (container.empty()) return;
+    if (container.empty()) {
+        console.log('Impact chart container not found');
+        return;
+    }
     
     // Clear any existing content
     container.selectAll('*').remove();
     
-    const width = container.node().getBoundingClientRect().width || 400;
+    // Get container width, with better fallback
+    const containerElement = container.node();
+    const rect = containerElement.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const width = containerWidth > 0 ? containerWidth : 600;
     const height = 550;
+    
+    console.log('Impact chart - width:', width, 'containerWidth:', containerWidth);
+    console.log('Impact chart - container rect:', rect);
+    console.log('Impact chart - container visible:', rect.width > 0 && rect.height > 0);
     
     const svg = container.append('svg')
         .attr('width', width)
@@ -2975,6 +3021,32 @@ function setupRevealSections() {
         staggerItems.forEach((item, i) => {
           setTimeout(() => item.classList.add('visible'), i * 120);
         });
+        
+        // Re-initialize charts when their sections become visible
+        const chartContainers = entry.target.querySelectorAll('.chart-container');
+        chartContainers.forEach(container => {
+          const chartId = container.id;
+          console.log('Reinitializing chart for visible section:', chartId);
+          
+          // Add a small delay to ensure the section is fully visible and sized
+          setTimeout(() => {
+            switch(chartId) {
+              case 'waste-causes-chart':
+                initCausesChart();
+                break;
+              case 'waste-effects-chart':
+                initEffectsChart();
+                break;
+              case 'waste-solutions-chart':
+                initSolutionsChart();
+                break;
+              case 'waste-impact-chart':
+                initImpactChart();
+                break;
+            }
+          }, 200); // Small delay to ensure DOM is ready
+        });
+        
         observer.unobserve(entry.target); // Only animate once
       }
     });
