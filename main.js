@@ -2073,7 +2073,7 @@ function initImpactChart() {
             potentialSavings: 1200,
             icon: '🌍',
             description: 'Climate and environmental mitigation costs',
-            color: '#27ae60'
+            color: '#b4d1bc'
         },
         { 
             category: 'Business Losses', 
